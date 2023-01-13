@@ -5,6 +5,8 @@ log(canvas)
 
 let boardMoving = false
 let intervalForSplash
+let steerLeft = 0
+let steerRight = 0
 class App{
     constructor(){
         this._engine = new Engine(canvas, true)
@@ -12,7 +14,7 @@ class App{
         this._engine.displayLoadingUI()
 
         this.boardSpd = -.02
-        this.windSpd = .07
+        this.windSpd = .29
         this.windDir = 'left'
         this.main()
     }
@@ -39,7 +41,8 @@ class App{
         let boardSplashJson = {"name":"CPU particle system","id":"default system","capacity":10000,"disposeOnStop":false,"manualEmitCount":-1,"emitter":[0,0,0],"particleEmitterType":{"type":"CylinderParticleEmitter","radius":1,"height":0.5,"radiusRange":1,"directionRandomizer":1},"texture":{"tags":null,"url":"https://assets.babylonjs.com/textures/flare.png","uOffset":0,"vOffset":0,"uScale":1,"vScale":1,"uAng":0,"vAng":0,"wAng":0,"uRotationCenter":0.5,"vRotationCenter":0.5,"wRotationCenter":0.5,"homogeneousRotationInUVTransform":false,"isBlocking":true,"name":"https://assets.babylonjs.com/textures/flare.png","hasAlpha":false,"getAlphaFromRGB":false,"level":1,"coordinatesIndex":0,"optimizeUVAllocation":true,"coordinatesMode":0,"wrapU":1,"wrapV":1,"wrapR":1,"anisotropicFilteringLevel":4,"isCube":false,"is3D":false,"is2DArray":false,"gammaSpace":true,"invertZ":false,"lodLevelInAlpha":false,"lodGenerationOffset":0,"lodGenerationScale":0,"linearSpecularLOD":false,"isRenderTarget":false,"animations":[],"invertY":true,"samplingMode":3,"_useSRGBBuffer":false},"isLocal":false,"animations":[],"beginAnimationOnStart":false,"beginAnimationFrom":0,"beginAnimationTo":60,"beginAnimationLoop":false,"startDelay":0,"renderingGroupId":0,"isBillboardBased":true,"billboardMode":7,"minAngularSpeed":0,"maxAngularSpeed":0,"minSize":0.1,"maxSize":0.1,"minScaleX":2,"maxScaleX":1,"minScaleY":1,"maxScaleY":1,"minEmitPower":2,"maxEmitPower":2,"minLifeTime":1,"maxLifeTime":1.5,"emitRate":1000,"gravity":[0,1,10],"noiseStrength":[10,10,10],"color1":[0.12156862745098039,0.45098039215686275,0.403921568627451,1],"color2":[0.0196078431372549,0.1568627450980392,0.20784313725490197,1],"colorDead":[0.5372549019607843,0.5764705882352941,0.5686274509803921,1],"updateSpeed":0.029,"targetStopDuration":0,"blendMode":0,"preWarmCycles":0,"preWarmStepOffset":1,"minInitialRotation":0.01,"maxInitialRotation":0,"startSpriteCellID":0,"spriteCellLoop":true,"endSpriteCellID":0,"spriteCellChangeSpeed":1,"spriteCellWidth":0,"spriteCellHeight":0,"spriteRandomStartCell":false,"isAnimationSheetEnabled":false,"useLogarithmicDepth":false,"sizeGradients":[{"gradient":0,"factor1":0.1,"factor2":0.71},{"gradient":0.87,"factor1":0.1,"factor2":0.3},{"gradient":1,"factor1":0.009,"factor2":0.01}],"textureMask":[1,1,1,1],"customShader":null,"preventAutoStart":false}
 
         let floatingWaters = []
-        let windz = []
+        let leftWindz = []
+        let rightWindz = []
         const scene = new Scene(this._engine)
 
         const light = new HemisphericLight("lug", new Vector3(0,10,0), scene)
@@ -84,9 +87,6 @@ class App{
         cam.setTarget(new Vector3(fPos.x,fPos.y,fPos.z))
         cam.alpha = Math.PI + Math.PI/2
         cam.beta = .3
-    
-        cam.attachControl(canvas, true)
-
 
         // start of babylon js playground
         var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
@@ -98,15 +98,7 @@ class App{
         skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
         skyboxMaterial.disableLighting = true;
         skybox.material = skyboxMaterial;
-            
-        // Ground
-        var groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
-        groundMaterial.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/textures/ground.jpg", scene);
-        groundMaterial.diffuseTexture.uScale = groundMaterial.diffuseTexture.vScale = 4;
-        groundMaterial.specularColor = new Color3(0,0,0)
-        var ground = BABYLON.Mesh.CreateGround("ground", 512, 512, 32, scene, false);
-        ground.position.y = -1;
-        ground.material = groundMaterial;
+
             
         var windMat = new BABYLON.StandardMaterial('spheremat', scene);
         windMat.useAlphaFromDiffuseTexture = true;
@@ -115,19 +107,6 @@ class App{
         windMat.diffuseTexture = new BABYLON.Texture("imagez/smoke.png", scene);
         windMat.diffuseTexture.hasAlpha = true;
 
-        
-        for (let win = 0; win < 80; win++) {
-            const addSpd = Math.random()*.07
-            const wind = BABYLON.MeshBuilder.CreateGround("wind", { height: 15, width: 90})
-            wind.material = windMat
-            wind.visibility = .2 + Math.random()*.3
-    
-            wind.position.y = 9
-      	    wind.position.x = BABYLON.Scalar.RandomRange(-70, 70);
-            wind.position.y = BABYLON.Scalar.RandomRange(9,9);
-            wind.position.z = BABYLON.Scalar.RandomRange(-80, 80);
-            windz.push({mesh: wind, spd: addSpd})
-        }
 
         await scene.whenReadyAsync()
         this._scene.dispose()
@@ -137,21 +116,41 @@ class App{
 
         setInterval(() => {
             if(Math.random() > .4){
-                windz.forEach(wnd => {
-                    wnd.mesh.position.x = BABYLON.Scalar.RandomRange(-76, 76);
-                    wnd.mesh.position.z = BABYLON.Scalar.RandomRange(-80, 80);
-                })
                 log("changing the wind direction")
                 if(this.windDir === "left"){
-                    this.windDir = "right"
+                    setTimeout(() => this.windDir = "right", 1000)
+                    this.showPrecaution(4000, "incoming wind from " + "right")
                 }else{
-                    this.windDir = "left"           
+                    setTimeout(() => this.windDir = "left", 1000)  
+                    this.showPrecaution(4000, "incoming wind from " + "left")
                 }
-     
+                   
             }
+        }, 7000)
+
+        // making clouds
+        setInterval(() => {
+            for (let win = 0; win < 5; win++) {
+                const addSpd = Math.random()*.07
+                const wind = BABYLON.MeshBuilder.CreateGround("wind", { height: 15, width: 90})
+                wind.material = windMat
+                wind.visibility = .2 + Math.random()*.3
+        
+                if(this.windDir === "left"){
+                    wind.position.x = BABYLON.Scalar.RandomRange(-170, -200);
+                }else if(this.windDir === "right"){
+                    wind.position.x = BABYLON.Scalar.RandomRange(170, 200);
+                }
+                wind.position.y = BABYLON.Scalar.RandomRange(9,9);
+                wind.position.z = BABYLON.Scalar.RandomRange(-80, 80);
+    
+                if(this.windDir === "left") leftWindz.push({mesh: wind, spd: addSpd})
+                if(this.windDir === "right") rightWindz.push({mesh: wind, spd: addSpd})
+                setTimeout(() => wind.dispose(), 10000)
+            }
+        }, 500)
             
-        }, 5000)
-                
+        this.showPrecaution(4000, "incoming wind from left")
 
         scene.registerBeforeRender(() => {
             if(floatingWaters.length){
@@ -161,27 +160,19 @@ class App{
                     if(fwater.mesh.position.z > 200) fwater.mesh.position.z = -150
                 })
             }
-            if(windz.length){
-                windz.forEach(wnd => {
-                    if(this.windDir === 'left'){
-                        wnd.mesh.locallyTranslate(new Vector3(-this.windSpd-wnd.spd*this._engine.getDeltaTime(),0,0))
-                        if(wnd.mesh.position.x < -100) {
-                            wnd.mesh.position.x = 140
-                            wnd.mesh.position.z = BABYLON.Scalar.RandomRange(-80, 80);
-                        }
-                        
-                    }else{
-                        wnd.mesh.locallyTranslate(new Vector3(this.windSpd+wnd.spd*this._engine.getDeltaTime(),0,0))
-                        if(wnd.mesh.position.x > 100) {
-                            wnd.mesh.position.x = -130
-                            wnd.mesh.position.z = BABYLON.Scalar.RandomRange(-80, 80);
-                        }
-                    }
-                    
-                })
+
+            leftWindz.forEach(wnd => {
+                wnd.mesh.locallyTranslate(new Vector3(this.windSpd+wnd.spd*this._engine.getDeltaTime(),0,0))
+            })
+            rightWindz.forEach(wnd => {
+                wnd.mesh.locallyTranslate(new Vector3(-this.windSpd-wnd.spd*this._engine.getDeltaTime(),0,0))
+            })
+            if(boardMoving){ 
+                farent.locallyTranslate(new Vector3(0,0,this.boardSpd*this._engine.getDeltaTime()))
+            }else{ 
+                if(farent.position.z < 40) farent.position.z += .4 
+                this.windDir === "left" ? farent.position.x += this.windSpd : farent.position.x -= this.windSpd
             }
-            if(boardMoving){ farent.locallyTranslate(new Vector3(0,0,this.boardSpd*this._engine.getDeltaTime()))
-            }else{ if(farent.position.z < 40) farent.position.z += .4 }
         })
 
         window.addEventListener("keyup", e => {
@@ -189,10 +180,13 @@ class App{
                 log(cam.radius)
                 log(cam.alpha)
                 log(cam.beta)
-                
             }
+            steerRight = 0
+            steerLeft = 0
             boardMoving = false
             boardSplashPS.stop()
+            farent.rotationQuaternion = null
+            farent.rotation.y = 0
             clearInterval(intervalForSplash)
         })
         window.addEventListener("keydown", e => {
@@ -208,14 +202,33 @@ class App{
             } 
             
             if(e.key === "ArrowRight"){
+                steerRight-=.02
+                
                 boardMoving = true
-                farent.rotation.y = -Math.PI/2 + .2
+                if(steerRight < -.22) return log('enough')
+                // farent.rotation.y = -Math.PI/2 + .2
+                log('nagana paren ba')
+                farent.addRotation(0,steerRight,0)
             }
             if(e.key === "ArrowLeft") {
+                steerLeft+=.02
+                
                 boardMoving = true
-                farent.rotation.y = Math.PI/2 - .2
+                if(steerLeft > .22) return log('enough')
+                // farent.rotation.y = -Math.PI/2 + .2
+                log('nagana paren ba')
+                farent.addRotation(0,steerLeft,0)
             }
         })
+    }
+    showPrecaution(dura, mes){
+        const windPrec = document.querySelector(".wind-details")
+
+        windPrec.innerHTML = mes
+        windPrec.style.display = "block"
+        setTimeout(() => {
+            windPrec.style.display = "none"
+        }, dura)
     }
 }
 

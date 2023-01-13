@@ -12,6 +12,8 @@ class App{
         this._engine.displayLoadingUI()
 
         this.boardSpd = -.02
+        this.windSpd = .07
+        this.windDir = 'left'
         this.main()
     }
 
@@ -37,6 +39,7 @@ class App{
         let boardSplashJson = {"name":"CPU particle system","id":"default system","capacity":10000,"disposeOnStop":false,"manualEmitCount":-1,"emitter":[0,0,0],"particleEmitterType":{"type":"CylinderParticleEmitter","radius":1,"height":0.5,"radiusRange":1,"directionRandomizer":1},"texture":{"tags":null,"url":"https://assets.babylonjs.com/textures/flare.png","uOffset":0,"vOffset":0,"uScale":1,"vScale":1,"uAng":0,"vAng":0,"wAng":0,"uRotationCenter":0.5,"vRotationCenter":0.5,"wRotationCenter":0.5,"homogeneousRotationInUVTransform":false,"isBlocking":true,"name":"https://assets.babylonjs.com/textures/flare.png","hasAlpha":false,"getAlphaFromRGB":false,"level":1,"coordinatesIndex":0,"optimizeUVAllocation":true,"coordinatesMode":0,"wrapU":1,"wrapV":1,"wrapR":1,"anisotropicFilteringLevel":4,"isCube":false,"is3D":false,"is2DArray":false,"gammaSpace":true,"invertZ":false,"lodLevelInAlpha":false,"lodGenerationOffset":0,"lodGenerationScale":0,"linearSpecularLOD":false,"isRenderTarget":false,"animations":[],"invertY":true,"samplingMode":3,"_useSRGBBuffer":false},"isLocal":false,"animations":[],"beginAnimationOnStart":false,"beginAnimationFrom":0,"beginAnimationTo":60,"beginAnimationLoop":false,"startDelay":0,"renderingGroupId":0,"isBillboardBased":true,"billboardMode":7,"minAngularSpeed":0,"maxAngularSpeed":0,"minSize":0.1,"maxSize":0.1,"minScaleX":2,"maxScaleX":1,"minScaleY":1,"maxScaleY":1,"minEmitPower":2,"maxEmitPower":2,"minLifeTime":1,"maxLifeTime":1.5,"emitRate":1000,"gravity":[0,1,10],"noiseStrength":[10,10,10],"color1":[0.12156862745098039,0.45098039215686275,0.403921568627451,1],"color2":[0.0196078431372549,0.1568627450980392,0.20784313725490197,1],"colorDead":[0.5372549019607843,0.5764705882352941,0.5686274509803921,1],"updateSpeed":0.029,"targetStopDuration":0,"blendMode":0,"preWarmCycles":0,"preWarmStepOffset":1,"minInitialRotation":0.01,"maxInitialRotation":0,"startSpriteCellID":0,"spriteCellLoop":true,"endSpriteCellID":0,"spriteCellChangeSpeed":1,"spriteCellWidth":0,"spriteCellHeight":0,"spriteRandomStartCell":false,"isAnimationSheetEnabled":false,"useLogarithmicDepth":false,"sizeGradients":[{"gradient":0,"factor1":0.1,"factor2":0.71},{"gradient":0.87,"factor1":0.1,"factor2":0.3},{"gradient":1,"factor1":0.009,"factor2":0.01}],"textureMask":[1,1,1,1],"customShader":null,"preventAutoStart":false}
 
         let floatingWaters = []
+        let windz = []
         const scene = new Scene(this._engine)
 
         const light = new HemisphericLight("lug", new Vector3(0,10,0), scene)
@@ -82,7 +85,49 @@ class App{
         cam.alpha = Math.PI + Math.PI/2
         cam.beta = .3
     
-        // cam.attachControl(canvas, true)
+        cam.attachControl(canvas, true)
+
+
+        // start of babylon js playground
+        var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
+        var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+        skyboxMaterial.backFaceCulling = false;
+        skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/textures/TropicalSunnyDay", scene);
+        skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+        skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+        skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+        skyboxMaterial.disableLighting = true;
+        skybox.material = skyboxMaterial;
+            
+        // Ground
+        var groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
+        groundMaterial.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/textures/ground.jpg", scene);
+        groundMaterial.diffuseTexture.uScale = groundMaterial.diffuseTexture.vScale = 4;
+        groundMaterial.specularColor = new Color3(0,0,0)
+        var ground = BABYLON.Mesh.CreateGround("ground", 512, 512, 32, scene, false);
+        ground.position.y = -1;
+        ground.material = groundMaterial;
+            
+        var windMat = new BABYLON.StandardMaterial('spheremat', scene);
+        windMat.useAlphaFromDiffuseTexture = true;
+        // windMat.useSpecularOverAlpha = true;
+        windMat.alphaCutOff = 0.1;
+        windMat.diffuseTexture = new BABYLON.Texture("imagez/smoke.png", scene);
+        windMat.diffuseTexture.hasAlpha = true;
+
+        
+        for (let win = 0; win < 80; win++) {
+            const addSpd = Math.random()*.07
+            const wind = BABYLON.MeshBuilder.CreateGround("wind", { height: 15, width: 90})
+            wind.material = windMat
+            wind.visibility = .2 + Math.random()*.3
+    
+            wind.position.y = 9
+      	    wind.position.x = BABYLON.Scalar.RandomRange(-70, 70);
+            wind.position.y = BABYLON.Scalar.RandomRange(9,9);
+            wind.position.z = BABYLON.Scalar.RandomRange(-80, 80);
+            windz.push({mesh: wind, spd: addSpd})
+        }
 
         await scene.whenReadyAsync()
         this._scene.dispose()
@@ -90,6 +135,22 @@ class App{
         
         this._engine.hideLoadingUI()
 
+        setInterval(() => {
+            if(Math.random() > .4){
+                windz.forEach(wnd => {
+                    wnd.mesh.position.x = BABYLON.Scalar.RandomRange(-76, 76);
+                    wnd.mesh.position.z = BABYLON.Scalar.RandomRange(-80, 80);
+                })
+                log("changing the wind direction")
+                if(this.windDir === "left"){
+                    this.windDir = "right"
+                }else{
+                    this.windDir = "left"           
+                }
+     
+            }
+            
+        }, 5000)
                 
 
         scene.registerBeforeRender(() => {
@@ -98,6 +159,25 @@ class App{
                     fwater.mesh.locallyTranslate(new Vector3(0,0,fwater.spd))
                    
                     if(fwater.mesh.position.z > 200) fwater.mesh.position.z = -150
+                })
+            }
+            if(windz.length){
+                windz.forEach(wnd => {
+                    if(this.windDir === 'left'){
+                        wnd.mesh.locallyTranslate(new Vector3(-this.windSpd-wnd.spd*this._engine.getDeltaTime(),0,0))
+                        if(wnd.mesh.position.x < -100) {
+                            wnd.mesh.position.x = 140
+                            wnd.mesh.position.z = BABYLON.Scalar.RandomRange(-80, 80);
+                        }
+                        
+                    }else{
+                        wnd.mesh.locallyTranslate(new Vector3(this.windSpd+wnd.spd*this._engine.getDeltaTime(),0,0))
+                        if(wnd.mesh.position.x > 100) {
+                            wnd.mesh.position.x = -130
+                            wnd.mesh.position.z = BABYLON.Scalar.RandomRange(-80, 80);
+                        }
+                    }
+                    
                 })
             }
             if(boardMoving){ farent.locallyTranslate(new Vector3(0,0,this.boardSpd*this._engine.getDeltaTime()))

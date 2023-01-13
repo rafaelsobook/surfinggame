@@ -7,13 +7,16 @@ let boardMoving = false
 let intervalForSplash
 let steerLeft = 0
 let steerRight = 0
+
+let goingRight = false
+let goingLeft = false
 class App{
     constructor(){
         this._engine = new Engine(canvas, true)
         this._scene = new Scene(this._engine)
         this._engine.displayLoadingUI()
 
-        this.boardSpd = -.02
+        this.boardSpd = -.03
         this.windSpd = .29
         this.windDir = 'left'
         this.main()
@@ -58,7 +61,7 @@ class App{
         const Wave = await SceneLoader.ImportMeshAsync("", "./models/", "waves.glb", scene)
         Wave.meshes[1].parent = null
         Wave.meshes[1].position.y += 1000
-        for (let p = 0; p < 120; p++) {
+        for (let p = 0; p < 140; p++) {
             const mySpd = .009 + Math.random()*.005
             const newWave = Wave.meshes[1].createInstance('newWave')
             const fId = Math.random().toString()
@@ -67,6 +70,7 @@ class App{
             newWave.position.y = BABYLON.Scalar.RandomRange(0,0);
             newWave.position.z = BABYLON.Scalar.RandomRange(-175, 175);
             newWave.actionManager = new ActionManager(scene)
+            newWave.freezeWorldMatrix()
             floatingWaters.push({_id: fId, spd: mySpd, mesh: newWave, isDown: Math.random() > .05 ? true : false })
         }
         const Board = await SceneLoader.ImportMeshAsync("", "./models/", "board.glb", scene)
@@ -86,7 +90,7 @@ class App{
         const fPos = theFront.box.position
         cam.setTarget(new Vector3(fPos.x,fPos.y,fPos.z))
         cam.alpha = Math.PI + Math.PI/2
-        cam.beta = .3
+        cam.beta = .47
 
         // start of babylon js playground
         var skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
@@ -173,6 +177,23 @@ class App{
                 if(farent.position.z < 40) farent.position.z += .4 
                 this.windDir === "left" ? farent.position.x += this.windSpd : farent.position.x -= this.windSpd
             }
+
+            if(goingRight){
+                steerRight-=.02                
+                boardMoving = true
+                if(steerRight < -.239) return log('enough')
+                // farent.rotation.y = -Math.PI/2 + .2
+                log('nagana paren ba')
+                farent.addRotation(0,steerRight,0)
+            }
+            if(goingLeft){
+                steerLeft+=.02                
+                boardMoving = true
+                if(steerLeft > .239) return log('enough')
+                // farent.rotation.y = -Math.PI/2 + .2
+                log('nagana paren ba')
+                farent.addRotation(0,steerLeft,0)
+            }
         })
 
         window.addEventListener("keyup", e => {
@@ -181,6 +202,8 @@ class App{
                 log(cam.alpha)
                 log(cam.beta)
             }
+            goingRight = false
+            goingLeft = false
             steerRight = 0
             steerLeft = 0
             boardMoving = false
@@ -202,22 +225,10 @@ class App{
             } 
             
             if(e.key === "ArrowRight"){
-                steerRight-=.02
-                
-                boardMoving = true
-                if(steerRight < -.22) return log('enough')
-                // farent.rotation.y = -Math.PI/2 + .2
-                log('nagana paren ba')
-                farent.addRotation(0,steerRight,0)
+                goingRight = true
             }
             if(e.key === "ArrowLeft") {
-                steerLeft+=.02
-                
-                boardMoving = true
-                if(steerLeft > .22) return log('enough')
-                // farent.rotation.y = -Math.PI/2 + .2
-                log('nagana paren ba')
-                farent.addRotation(0,steerLeft,0)
+                goingLeft = true
             }
         })
     }

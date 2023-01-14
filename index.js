@@ -53,7 +53,7 @@ class App{
         const dirLight = new DirectionalLight("lug", new Vector3(2,-1,4), scene)
 
         const cam = new ArcRotateCamera("arc",-1,0,197, new Vector3(0,0,1), scene)
-        cam.attachControl(canvas, true)
+        // cam.attachControl(canvas, true)
 
         const boardSplashPS = ParticleSystem.Parse(boardSplashJson, scene, "")
     
@@ -199,7 +199,7 @@ class App{
             
 
             waves.push({mesh: movingWave, spdRise: Math.random()*.1})
-
+            movingWave.isVisible = false
             
             farent.actionManager.registerAction(
                 new ExecuteCodeAction(
@@ -297,10 +297,10 @@ class App{
                 }, 2000)
             } 
             
-            if(e.key === "d"){
+            if(e.key === "ArrowRight"){
                 goingRight = true
             }
-            if(e.key === "a") {
+            if(e.key === "ArrowLeft") {
                 goingLeft = true
             }
         })

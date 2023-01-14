@@ -46,18 +46,19 @@ class App{
         let floatingWaters = []
         let leftWindz = []
         let rightWindz = []
+        let waves = []
         const scene = new Scene(this._engine)
 
         const light = new HemisphericLight("lug", new Vector3(0,10,0), scene)
         const dirLight = new DirectionalLight("lug", new Vector3(2,-1,4), scene)
 
         const cam = new ArcRotateCamera("arc",-1,0,197, new Vector3(0,0,1), scene)
-        // cam.attachControl(canvas, true)
+        cam.attachControl(canvas, true)
 
         const boardSplashPS = ParticleSystem.Parse(boardSplashJson, scene, "")
     
         const box = MeshBuilder.CreateBox("asd", {size: .5}, scene)
-        const farent = MeshBuilder.CreateBox("farent", {size: .5}, scene)
+        const farent = MeshBuilder.CreateBox("farent", {size: 10.5}, scene)
         const Wave = await SceneLoader.ImportMeshAsync("", "./models/", "waves.glb", scene)
         Wave.meshes[1].parent = null
         Wave.meshes[1].position.y += 1000
@@ -82,6 +83,7 @@ class App{
         // boardSplashPS.gravity = new Vector3(0,20,0)
         box.position = new Vector3(0,0,4.6)
         box.isVisible = false
+        farent.isVisible = false
 
 
         const theFront = this.createSplashSmall(box, boardSplashPS, scene)
@@ -111,7 +113,26 @@ class App{
         windMat.diffuseTexture = new BABYLON.Texture("imagez/smoke.png", scene);
         windMat.diffuseTexture.hasAlpha = true;
 
+        const Surfer = await SceneLoader.ImportMeshAsync("", "./models/", "surfer.glb", scene)
 
+        Surfer.meshes.forEach(wve => wve.rotationQuaternion = null)
+        const surfer = Surfer.meshes[0]
+        surfer.position.y = 6.4
+        surfer.scaling = new Vector3(7.5,7.5,7.5)
+
+        farent.actionManager = new ActionManager(scene)
+
+
+
+        // farent.actionManager.registerAction(new ExecuteCodeAction(
+        //     {
+        //         trigger: ActionManager.OnIntersectionenterTrigger,
+        //         parameter: Surfer.meshes[1]
+        //     }, e => {
+        //         log('surfer is hit')
+        //     }
+        // ))
+        
         await scene.whenReadyAsync()
         this._scene.dispose()
         this._scene = scene
@@ -145,7 +166,7 @@ class App{
                 }else if(this.windDir === "right"){
                     wind.position.x = BABYLON.Scalar.RandomRange(170, 200);
                 }
-                wind.position.y = BABYLON.Scalar.RandomRange(9,9);
+                wind.position.y = BABYLON.Scalar.RandomRange(19,19);
                 wind.position.z = BABYLON.Scalar.RandomRange(-80, 80);
     
                 if(this.windDir === "left") leftWindz.push({mesh: wind, spd: addSpd})
@@ -153,10 +174,60 @@ class App{
                 setTimeout(() => wind.dispose(), 10000)
             }
         }, 500)
+          
+        let bigSplashWaveJson = {"name":"CPU particle system","id":"default system","capacity":10000,"disposeOnStop":false,"manualEmitCount":-1,"emitter":[0,0,0],"particleEmitterType":{"type":"CylinderParticleEmitter","radius":1,"height":15,"radiusRange":1,"directionRandomizer":1},"texture":{"tags":null,"url":"https://assets.babylonjs.com/textures/flare.png","uOffset":0,"vOffset":0,"uScale":1,"vScale":1,"uAng":0,"vAng":0,"wAng":0,"uRotationCenter":0.5,"vRotationCenter":0.5,"wRotationCenter":0.5,"homogeneousRotationInUVTransform":false,"isBlocking":true,"name":"https://assets.babylonjs.com/textures/flare.png","hasAlpha":false,"getAlphaFromRGB":false,"level":1,"coordinatesIndex":0,"optimizeUVAllocation":true,"coordinatesMode":0,"wrapU":1,"wrapV":1,"wrapR":1,"anisotropicFilteringLevel":4,"isCube":false,"is3D":false,"is2DArray":false,"gammaSpace":true,"invertZ":false,"lodLevelInAlpha":false,"lodGenerationOffset":0,"lodGenerationScale":0,"linearSpecularLOD":false,"isRenderTarget":false,"animations":[],"invertY":true,"samplingMode":3,"_useSRGBBuffer":false},"isLocal":false,"animations":[],"beginAnimationOnStart":false,"beginAnimationFrom":0,"beginAnimationTo":60,"beginAnimationLoop":false,"startDelay":0,"renderingGroupId":0,"isBillboardBased":true,"billboardMode":7,"minAngularSpeed":0,"maxAngularSpeed":0,"minSize":0.1,"maxSize":0.1,"minScaleX":2,"maxScaleX":1,"minScaleY":1,"maxScaleY":1,"minEmitPower":2,"maxEmitPower":2,"minLifeTime":4,"maxLifeTime":4,"emitRate":1000,"gravity":[0,-4,0],"noiseStrength":[10,10,10],"color1":[0.00784313725490196,0.2823529411764706,0.2823529411764706,1],"color2":[0.0196078431372549,0.1568627450980392,0.20784313725490197,1],"colorDead":[0.13725490196078433,0.15294117647058825,0.23529411764705882,1],"updateSpeed":0.045,"targetStopDuration":0,"blendMode":0,"preWarmCycles":0,"preWarmStepOffset":1,"minInitialRotation":0.01,"maxInitialRotation":0,"startSpriteCellID":0,"spriteCellLoop":true,"endSpriteCellID":0,"spriteCellChangeSpeed":1,"spriteCellWidth":0,"spriteCellHeight":0,"spriteRandomStartCell":false,"isAnimationSheetEnabled":false,"useLogarithmicDepth":false,"sizeGradients":[{"gradient":0,"factor1":1,"factor2":1.5},{"gradient":0.5,"factor1":2,"factor2":2.5},{"gradient":1,"factor1":0.01,"factor2":0.5}],"textureMask":[1,1,1,1],"customShader":null,"preventAutoStart":false}
+        const bigSplashWave = ParticleSystem.Parse(bigSplashWaveJson, scene, "")
             
+
+        // making big waves
+        setInterval(() => {
+            const bigwavePsClone = bigSplashWave.clone('bigSplashWave')
+            const forPSMesh = MeshBuilder.CreateBox("bigwave", {size: .5}, scene)
+            bigwavePsClone.emitter = forPSMesh
+            bigwavePsClone.emitRate = BABYLON.Scalar.RandomRange(400, 2000)
+           
+            const movingWave = MeshBuilder.CreateBox("movingWave", {size: 5.5, width: 14}, scene)
+            forPSMesh.parent = movingWave
+            forPSMesh.rotation.z = Math.PI/2
+            forPSMesh.position.y += 4
+            
+
+            movingWave.position.x = BABYLON.Scalar.RandomRange(-95, 95);
+            movingWave.position.z = BABYLON.Scalar.RandomRange(-90, -120);
+            // movingWave.position.z = BABYLON.Scalar.RandomRange(-40, 60);
+            movingWave.position.y = BABYLON.Scalar.RandomRange(2,2);
+            
+
+            waves.push({mesh: movingWave, spdRise: Math.random()*.1})
+
+            
+            farent.actionManager.registerAction(
+                new ExecuteCodeAction(
+                    {
+                        trigger: ActionManager.OnIntersectionEnterTrigger, 
+                        parameter: { 
+                            mesh: movingWave, 
+                            usePreciseIntersection: true
+                        }
+                    }, () => { log("yahooo")}
+                )
+            );
+
+            setTimeout(() => {
+                bigwavePsClone.dispose()
+                movingWave.dispose()
+            }, 50000)
+        },5000)
+        // bigSplashWave.disposeOnStop = true
+        bigSplashWave.stop()
         this.showPrecaution(4000, "incoming wind from left")
 
         scene.registerBeforeRender(() => {
+            waves.forEach(wve => {
+                wve.mesh.locallyTranslate(new Vector3(0,0,.5))
+                if(wve.mesh.position.y < 8.8) wve.mesh.position.y += wve.spdRise
+                
+            })
             if(floatingWaters.length){
                 floatingWaters.forEach(fwater => {
                     fwater.mesh.locallyTranslate(new Vector3(0,0,fwater.spd))
@@ -181,21 +252,23 @@ class App{
             if(goingRight){
                 steerRight-=.02                
                 boardMoving = true
-                if(steerRight < -.239) return log('enough')
+                if(steerRight < -.239) return 
                 // farent.rotation.y = -Math.PI/2 + .2
-                log('nagana paren ba')
                 farent.addRotation(0,steerRight,0)
             }
             if(goingLeft){
                 steerLeft+=.02                
                 boardMoving = true
-                if(steerLeft > .239) return log('enough')
+                if(steerLeft > .239) return 
                 // farent.rotation.y = -Math.PI/2 + .2
-                log('nagana paren ba')
+    
                 farent.addRotation(0,steerLeft,0)
             }
         })
 
+        this.pressControllers(boardSplashPS, theFront, farent)
+    }
+    pressControllers(boardSplashPS, theFront, farent){
         window.addEventListener("keyup", e => {
             if(e.key === " "){
                 log(cam.radius)
@@ -224,10 +297,10 @@ class App{
                 }, 2000)
             } 
             
-            if(e.key === "ArrowRight"){
+            if(e.key === "d"){
                 goingRight = true
             }
-            if(e.key === "ArrowLeft") {
+            if(e.key === "a") {
                 goingLeft = true
             }
         })

@@ -28,7 +28,8 @@ let falling = false
 let farent
 let surferBody
 
-
+// joystick
+let leftPuck // 
 class App{
     constructor(){
         this._engine = new Engine(canvas, true)
@@ -122,7 +123,7 @@ class App{
         leftThumbContainer.left = sideJoystickOffset;
         leftThumbContainer.top = bottomJoystickOffset;    
     
-        let leftPuck = this.makeThumbArea("leftPuck", 0, "blue", "black");
+        leftPuck = this.makeThumbArea("leftPuck", 0, "blue", "black");
         leftPuck.height = "65px";
         leftPuck.width = "65px";
         leftPuck.isVisible = true
@@ -187,13 +188,22 @@ class App{
                 leftPuck.left = leftPuck.floatLeft;
                 leftPuck.top = leftPuck.floatTop;
                 boardMoving = true
-
+                goingLeft = false
+                goingRight = false
                 surferPs.stop()
-                if(xAddPos > 0){
+                if(xAddPos > 10){
+                    goingLeft = false
                     goingRight = true
+                    if(onBoard) farent.rotation.y = -1.29
+                    if(!onBoard) surferBody.rotation.y = -1.29
+                    return
                 }
-                if(xAddPos < 0) {
+                if(xAddPos < -10) {
+                    goingRight = false
                     goingLeft = true
+                    if(onBoard) farent.rotation.y = 1.29
+                    if(!onBoard) surferBody.rotation.y = 1.29
+                    return
                 }
             }       
         });
@@ -258,6 +268,7 @@ class App{
                     }
                 }, () => { 
                     if(falling) return log("i am falling stop climb")
+                    if(leftPuck !== undefined) leftPuck.isDown = false
                     canKeyPress = false
                     actionMode = "none"
                     doNotMove = true
@@ -412,8 +423,6 @@ class App{
         bigSplashWave.stop()
         this.showPrecaution(4000, "incoming wind from left")
 
-
-
         scene.registerBeforeRender(() => {
             waves.forEach(wve => {
                 wve.mesh.locallyTranslate(new Vector3(0,0,.5))
@@ -482,29 +491,29 @@ class App{
                     if(surferBody.position.z < 40) surferBody.position.z += .4 
                 }
             }
-            if(goingRight){
-                steeringNum-=.02                
-                log('moving right')
-                // if(this.windDir === 'right'){      
-                //     log("wind is coming from right")              
-                //     if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
-                // }else{
-                //     this.boardSpd -= .05
-                // }
-                if(steeringNum < -.239) return        
-            }
-            if(goingLeft){
-                steeringNum+=.02                
-                log('moving left')
-                // if(this.windDir === 'left'){       
-                //     log("wind is coming from left")             
-                //     if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
-                // }else{
-                //     this.boardSpd -= .05
-                // }
-                if(steeringNum > .239) return 
-            }
-            !onBoard ? surferBody.addRotation(0,steeringNum,0) : farent.addRotation(0,steeringNum,0)         
+            // if(goingRight){
+            //     steeringNum-=.02                
+            //     log('moving right')
+            //     // if(this.windDir === 'right'){      
+            //     //     log("wind is coming from right")              
+            //     //     if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
+            //     // }else{
+            //     //     this.boardSpd -= .05
+            //     // }
+            //     if(steeringNum < -.239) return        
+            // }
+            // if(goingLeft){
+            //     steeringNum+=.02                
+            //     log('moving left')
+            //     // if(this.windDir === 'left'){       
+            //     //     log("wind is coming from left")             
+            //     //     if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
+            //     // }else{
+            //     //     this.boardSpd -= .05
+            //     // }
+            //     if(steeringNum > .239) return 
+            // }
+            // !onBoard ? surferBody.addRotation(0,steeringNum,0) : farent.addRotation(0,steeringNum,0)         
         })
         this._makeJoyStick(cam, scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
         this.pressControllers(killerMesh, rotatingMesh, Kite, boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
@@ -552,22 +561,26 @@ class App{
             if(e.key === "ArrowRight"){
                 goingRight = true
                 
-                if(onBoard) actionMode = "surfright"
+                // if(onBoard) actionMode = "surfright"
   
-                if(this.windDir === 'right'){      
-                    log("wind is coming from right")              
-                    if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
-                }else{
-                    this.boardSpd -= .001
-                }
-                
+                // if(this.windDir === 'right'){      
+                //     log("wind is coming from right")              
+                //     if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
+                // }else{
+                //     this.boardSpd -= .001
+                // }
+                if(onBoard) farent.rotation.y = -1.29
+                if(!onBoard) surferBody.rotation.y = -1.29
+                boardMoving = true
                 boardSplashPS.stop()
             }
             if(e.key === "ArrowLeft") {
                 goingLeft = true
      
-                if(onBoard) actionMode = "surfleft"
-                
+                // if(onBoard) actionMode = "surfleft"
+                if(onBoard) farent.rotation.y = 1.29
+                if(!onBoard) surferBody.rotation.y = 1.29
+                boardMoving = true
                 boardSplashPS.stop()
             }
         })

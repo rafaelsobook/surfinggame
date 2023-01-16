@@ -1,4 +1,4 @@
-const { Engine,DirectionalLight, ParticleSystem, Scene, ExecuteCodeAction, ActionManager, MeshBuilder,Vector3, HemisphericLight, ArcRotateCamera, SceneLoader, Color3} = BABYLON
+const { Engine,DirectionalLight, ParticleSystem, Scene, GUI, ExecuteCodeAction, ActionManager, MeshBuilder,Vector3, HemisphericLight, ArcRotateCamera, SceneLoader, Color3} = BABYLON
 const canvas = document.getElementById("renderCanvas")
 const startBtn = document.getElementById("startBtn")
 const log = console.log
@@ -62,6 +62,10 @@ class App{
         this._engine.runRenderLoop( () => {
             this._scene.render()
         })
+
+        window.addEventListener("resize", e => {
+            this._engine.resize()
+        })
     }
 
     createSplashSmall(scene){
@@ -83,6 +87,125 @@ class App{
             this.setUpCharacter('surfing', farent, surferBody, {z: 1, y: -4.5})
         }, 2000)
     }
+    makeThumbArea(name, thickness, color, background, curves){
+        let rect = new GUI.Ellipse();
+            rect.name = name;
+            rect.thickness = thickness;
+            rect.color = color;
+            rect.background = background;
+            rect.paddingLeft = "0px";
+            rect.paddingRight = "0px";
+            rect.paddingTop = "0px";
+            rect.paddingBottom = "0px";    
+        
+        return rect;
+    }
+    _makeJoyStick(cam,scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh){
+
+        let adt = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        let xAddPos = 0;
+        let yAddPos = 0;
+        let xAddRot = 0;
+        let yAddRot = 0;
+        let sideJoystickOffset = 50;
+        let bottomJoystickOffset = -50;
+        let translateTransform                
+    
+        let leftThumbContainer = this.makeThumbArea("leftThumb", 2, "gray", null);
+        leftThumbContainer.height = "120px";
+        leftThumbContainer.width = "120px";
+        leftThumbContainer.isPointerBlocker = true;
+        leftThumbContainer.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+        leftThumbContainer.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+        leftThumbContainer.alpha = 0.3;
+
+        leftThumbContainer.left = sideJoystickOffset;
+        leftThumbContainer.top = bottomJoystickOffset;    
+    
+        let leftPuck = this.makeThumbArea("leftPuck", 0, "blue", "black");
+        leftPuck.height = "65px";
+        leftPuck.width = "65px";
+        leftPuck.isVisible = true
+        leftPuck.left = 0
+        leftPuck.isDown = true
+        leftPuck.isPointerBlocker = true;
+        leftPuck.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+        leftPuck.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    
+        leftThumbContainer.onPointerDownObservable.add(function(coordinates) {
+            if(!canKeyPress) return log("your isCanKeyPress is false")
+            // cam.setTarget(scene.getMeshByName(`box.${myId}`))
+            leftPuck.isVisible = true;
+            leftPuck.floatLeft = coordinates.x-(leftThumbContainer._currentMeasure.width*.5)-sideJoystickOffset;
+            leftPuck.left = leftPuck.floatLeft;
+            leftPuck.floatTop = adt._canvas.height - coordinates.y-(leftThumbContainer._currentMeasure.height*.5)+bottomJoystickOffset;
+            leftPuck.top = leftPuck.floatTop*-1;
+            leftPuck.isDown = true;
+            leftThumbContainer.alpha = 0.3;
+            leftPuck.alpha = 1    
+
+            // botMoving = true
+        });
+
+        leftThumbContainer.onPointerUpObservable.add(function(coordinates) {
+            // boardMoving = false
+            
+            xAddPos = 0;
+            yAddPos = 0;
+            leftPuck.isDown = false;
+            leftPuck.isVisible = false;
+            leftThumbContainer.alpha = 0.2;
+
+            if(surfingTo !== undefined){
+                log("will fall after keyup")
+                return theGame.fall(farent, surferBody, Kite, surferPs,killerMesh, rotatingMesh, surferBody)
+            } 
+            
+            theGame.boardSpd = -.03
+            steeringNum = 0
+            if(onBoard){
+                log('on board tayo kaya surfing dapat')
+                actionMode = "surfing"
+            }else{
+                actionMode = "0sinking"
+            }
+            boardSplashPS.stop()
+            theGame.resetRotatAndDir(farent, surferBody)
+            clearInterval(intervalForSplash)
+            surferPsmesh.position.z = 0
+            surferPs.stop()
+            
+        });
+
+        leftThumbContainer.onPointerMoveObservable.add(function(coordinates) {
+            if(!canKeyPress) return log("your isCanKeyPress is false")
+            if (leftPuck.isDown) {
+                xAddPos = coordinates.x-(leftThumbContainer._currentMeasure.width*.5)-sideJoystickOffset;
+                yAddPos = adt._canvas.height - coordinates.y-(leftThumbContainer._currentMeasure.height*.5)+bottomJoystickOffset;
+                leftPuck.floatLeft = xAddPos;
+                leftPuck.floatTop = yAddPos*-1;
+                leftPuck.left = leftPuck.floatLeft;
+                leftPuck.top = leftPuck.floatTop;
+                boardMoving = true
+
+                surferPs.stop()
+                if(xAddPos > 0){
+                    goingRight = true
+                }
+                if(xAddPos < 0) {
+                    goingLeft = true
+                }
+            }       
+        });
+
+        adt.addControl(leftThumbContainer);
+        leftThumbContainer.addControl(leftPuck);
+        // leftThumbContainer.addControl(leftPuckCont);
+        leftPuck.isVisible = true;
+        // if(this._desktopMode)
+        leftThumbContainer.isVisible = true
+        return
+    }
     async _goToStart(){
         
         let floatingWaters = []
@@ -101,6 +224,7 @@ class App{
         // CREATING THE WATER THAT LOOPS
         const Wave = await SceneLoader.ImportMeshAsync("", "./models/", "waves.glb", scene)
         Wave.meshes[1].parent = null
+        Wave.meshes.forEach(mesh => log(mesh.name))
 
         this.createWaters(60, Wave.meshes[1], floatingWaters, scene);  
 
@@ -288,6 +412,8 @@ class App{
         bigSplashWave.stop()
         this.showPrecaution(4000, "incoming wind from left")
 
+
+
         scene.registerBeforeRender(() => {
             waves.forEach(wve => {
                 wve.mesh.locallyTranslate(new Vector3(0,0,.5))
@@ -358,19 +484,29 @@ class App{
             }
             if(goingRight){
                 steeringNum-=.02                
-                boardMoving = true
-               
+                log('moving right')
+                // if(this.windDir === 'right'){      
+                //     log("wind is coming from right")              
+                //     if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
+                // }else{
+                //     this.boardSpd -= .05
+                // }
                 if(steeringNum < -.239) return        
             }
             if(goingLeft){
                 steeringNum+=.02                
-                boardMoving = true
-              
+                log('moving left')
+                // if(this.windDir === 'left'){       
+                //     log("wind is coming from left")             
+                //     if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
+                // }else{
+                //     this.boardSpd -= .05
+                // }
                 if(steeringNum > .239) return 
             }
             !onBoard ? surferBody.addRotation(0,steeringNum,0) : farent.addRotation(0,steeringNum,0)         
         })
-        
+        this._makeJoyStick(cam, scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
         this.pressControllers(killerMesh, rotatingMesh, Kite, boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
     }
     pressControllers(killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh){
@@ -411,7 +547,7 @@ class App{
                 }, 500)
                 
             } 
-            if(!onBoard) surferPsmesh.position.z = -7.5
+            // if(!onBoard) surferPsmesh.position.z = -7.5
             surferPs.stop()
             if(e.key === "ArrowRight"){
                 goingRight = true
@@ -431,13 +567,6 @@ class App{
                 goingLeft = true
      
                 if(onBoard) actionMode = "surfleft"
-
-                if(this.windDir === 'left'){       
-                    log("wind is coming from left")             
-                    if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
-                }else{
-                    this.boardSpd -= .001
-                }
                 
                 boardSplashPS.stop()
             }
@@ -557,7 +686,7 @@ class App{
     }
     createWaters(length, toClone, floatingWaters, scene){
         for (let p = 0; p < length; p++) {
-            const mySpd = .009 + Math.random()*.005
+            const mySpd = .4 + Math.random()*.55
             const newWave = toClone.createInstance('newWave')
             const fId = Math.random().toString()
             newWave.parent = null
@@ -565,7 +694,7 @@ class App{
             newWave.position.y = BABYLON.Scalar.RandomRange(0,0);
             newWave.position.z = BABYLON.Scalar.RandomRange(-105, 155);
             newWave.actionManager = new ActionManager(scene)
-            newWave.freezeWorldMatrix()
+           
             
             floatingWaters.push({_id: fId, spd: mySpd, mesh: newWave, isDown: Math.random() > .05 ? true : false })
         }
@@ -584,10 +713,11 @@ class App{
 
         const killerMesh = MeshBuilder.CreateBox("killerMesh", {size: 8, depth: 30}, scene)
         const Killer = await SceneLoader.ImportMeshAsync("", "./models/", "surferkiller.glb", scene)
-        const theKiller = Killer.meshes[0]
+        const theKiller = Killer.meshes[0];
+        theKiller.scaling = new Vector3(.8,.8,.8)
         
         theKiller.parent = killerMesh
-        theKiller.rotationQuaternion = null
+        // theKiller.rotationQuaternion = null
         const killerAnims = Killer.animationGroups
 
         killerMesh.position.x = sharkRadius
@@ -608,14 +738,16 @@ class App{
                         usePreciseIntersection: true
                     }
                 }, () => { 
-                    log("rawr")
+                    const actionNum = Math.random() > .5 ? 1 : 2
                     killerAnims.forEach(ani => {
-                        if(ani.name === `eat${Math.random() > .5? 1 : 2}`){
+                        log(ani.name)
+                        if(ani.name === `eat${actionNum}`){
                             ani.play()
                         }else{
                             ani.stop()
                         }
                     })
+                    log(actionNum)
                     sharKToChase = undefined
                     surferPsmesh.parent.position.y = -70
                 }

@@ -1,6 +1,8 @@
 const { Engine,DirectionalLight, ParticleSystem, Scene, GUI, ExecuteCodeAction, ActionManager, MeshBuilder,Vector3, HemisphericLight, ArcRotateCamera, SceneLoader, Color3} = BABYLON
 const canvas = document.getElementById("renderCanvas")
 const startBtn = document.getElementById("startBtn")
+const gameOverCont = document.querySelector(".game-over-cont")
+const againBtn = document.getElementById("again")
 const log = console.log
 log(canvas)
 
@@ -9,8 +11,6 @@ let boardMoving = false
 let surfingTo = undefined
 let isSurfing = false
 let doNotMove = true
-let intervalForSplash
-let intervalForSurferSplash
 
 let steeringNum = 0
 let sharkRadius = 70
@@ -30,6 +30,13 @@ let surferBody
 
 // joystick
 let leftPuck // 
+// Intervals
+let changeWindInterv
+let makeCloudInterv
+let makingWaveInterv
+let intervalForSplash
+let intervalForSurferSplash
+
 class App{
     constructor(){
         this._engine = new Engine(canvas, true)
@@ -58,6 +65,11 @@ class App{
         charBody.position.z = loc.z
     }
     async main(){
+        clearInterval(changeWindInterv)
+        clearInterval(makeCloudInterv)
+        clearInterval(makingWaveInterv)
+        clearInterval(intervalForSplash)
+        clearInterval(intervalForSurferSplash)
         await this._goToStart()
 
         this._engine.runRenderLoop( () => {
@@ -80,11 +92,20 @@ class App{
         return {box: box, ps: splashPs}
     }
     introStart(){
+        
         actionMode = undefined
         this.playAnim(this.anims, "sittostand")
+        const rotatingMesh = this._scene.getMeshByName("rotatingMesh")
+        let sharkOpeningInterval
+        clearInterval(sharkOpeningInterval)
+        sharkOpeningInterval = setInterval(() => {
+            if(!rotatingMesh) return log('rotating mesh not found')
+            if(rotatingMesh.position.y <= 5) rotatingMesh.position.y+=.05
+            if(rotatingMesh.position.y > 5) clearInterval(sharkOpeningInterval)
+        },50)
         setTimeout(() => {
-            
             doNotMove = false
+            canKeyPress = true
             this.setUpCharacter('surfing', farent, surferBody, {z: 1, y: -4.5})
         }, 2000)
     }
@@ -187,23 +208,41 @@ class App{
                 leftPuck.floatTop = yAddPos*-1;
                 leftPuck.left = leftPuck.floatLeft;
                 leftPuck.top = leftPuck.floatTop;
+                // line code starts here
                 boardMoving = true
                 goingLeft = false
                 goingRight = false
                 surferPs.stop()
+
+                if(!canKeyPress) return log('cankeypress false')
+                if(!boardMoving){
+                
+                    clearInterval(intervalForSplash)
+                    intervalForSplash = setInterval(() => {
+                        theFront.ps.emitRate = 1000 + Math.random()* 1000
+                        theFront.ps.start()
+                        theFront.ps.targetStopDuration = .8 + Math.random()*.5
+                    }, 500)
+                    
+                } 
+                surferPs.stop()
                 if(xAddPos > 10){
-                    goingLeft = false
                     goingRight = true
+                    
+                    if(onBoard) actionMode = "surfright"
                     if(onBoard) farent.rotation.y = -1.29
                     if(!onBoard) surferBody.rotation.y = -1.29
-                    return
+                    boardMoving = true
+                    boardSplashPS.stop()
                 }
                 if(xAddPos < -10) {
-                    goingRight = false
                     goingLeft = true
+         
+                    if(onBoard) actionMode = "surfleft"
                     if(onBoard) farent.rotation.y = 1.29
                     if(!onBoard) surferBody.rotation.y = 1.29
-                    return
+                    boardMoving = true
+                    boardSplashPS.stop()
                 }
             }       
         });
@@ -216,8 +255,28 @@ class App{
         leftThumbContainer.isVisible = true
         return
     }
+    setup(){
+        canKeyPress = false
+        doNotMove = true
+        boardMoving = false
+        onBoard = true
+        goingLeft = false
+        goingRight = false
+        this.boardSpd = -.03
+        this.anims = []
+        surfingTo = undefined
+        isSurfing = false
+        steeringNum = 0
+        sharkRadius = 70
+        sharkRotatSpd = -.01
+        isHunting = true
+        sharKToChase = undefined
+        actionMode = "sitting"
+        falling = false
+    }
     async _goToStart(){
-        
+        this.setup()
+
         let floatingWaters = []
         let leftWindz = []
         let rightWindz = []
@@ -236,7 +295,7 @@ class App{
         Wave.meshes[1].parent = null
         Wave.meshes.forEach(mesh => log(mesh.name))
 
-        this.createWaters(60, Wave.meshes[1], floatingWaters, scene);  
+        this.createWaters(30, Wave.meshes[1], floatingWaters, scene);  
 
         this.setCamera(cam, theFront)
 
@@ -299,11 +358,11 @@ class App{
         await scene.whenReadyAsync()
         this._scene.dispose()
         this._scene = scene
-        
+        startBtn.style.display = "block"
         this._engine.hideLoadingUI()
 
         // changing wind direction every 7s
-        setInterval(() => {
+        changeWindInterv = setInterval(() => {
             sharkRotatSpd = BABYLON.Scalar.RandomRange(-.008,-.02)
             if(Math.random() > .1){
                 log("changing the wind direction")
@@ -324,7 +383,7 @@ class App{
         }, 7000)
 
         // making clouds
-        setInterval(() => {
+        makeCloudInterv = setInterval(() => {
             for (let win = 0; win < 5; win++) {
                 const addSpd = Math.random()*.07
                 const wind = BABYLON.MeshBuilder.CreateGround("wind", { height: 15, width: 90})
@@ -349,7 +408,7 @@ class App{
         const bigSplashWave = ParticleSystem.Parse(bigSplashWaveJson, scene, "")
             
         // making big waves
-        setInterval(() => {
+        makingWaveInterv = setInterval(() => {
             if(doNotMove) return
             const bigwavePsClone = bigSplashWave.clone('bigSplashWave')
             const forPSMesh = MeshBuilder.CreateBox("bigwave", {size: .5}, scene)
@@ -423,6 +482,7 @@ class App{
         bigSplashWave.stop()
         this.showPrecaution(4000, "incoming wind from left")
 
+        // this will run 40-60times per sec // run per Fps
         scene.registerBeforeRender(() => {
             waves.forEach(wve => {
                 wve.mesh.locallyTranslate(new Vector3(0,0,.5))
@@ -471,8 +531,15 @@ class App{
                 } 
                 if(boardMoving){ 
                     farent.locallyTranslate(new Vector3(0,0,this.boardSpd*this._engine.getDeltaTime()))
+                    if(goingLeft && this.windDir === 'left' || goingRight && this.windDir === 'right'){
+                        log("nakikipag bang gaan ka")
+                        if(this.boardSpd <= -.01) this.boardSpd = this.boardSpd + .01
+                        this.stopAnim(this.anims, 'surfing')
+                    }else{
+                        this.boardSpd = -.03
+                    }
                 }else if(!boardMoving && surfingTo === undefined){ 
-                    if(farent.position.z < 40) farent.position.z += .4 
+                    if(farent.position.z < 60) farent.position.z += .4 
                     this.windDir === "left" ? farent.position.x += this.windSpd : farent.position.x -= this.windSpd
                 }
             }else if(!onBoard){
@@ -488,7 +555,7 @@ class App{
                     actionMode = "swimming"
                     surferBody.locallyTranslate(new Vector3(0,0,this.boardSpd*this._engine.getDeltaTime()))
                 }else{ 
-                    if(surferBody.position.z < 40) surferBody.position.z += .4 
+                    if(surferBody.position.z < 100) surferBody.position.z += .4 
                 }
             }
             // if(goingRight){
@@ -561,14 +628,7 @@ class App{
             if(e.key === "ArrowRight"){
                 goingRight = true
                 
-                // if(onBoard) actionMode = "surfright"
-  
-                // if(this.windDir === 'right'){      
-                //     log("wind is coming from right")              
-                //     if(this.boardSpd < 0 && onBoard) this.boardSpd += .0004
-                // }else{
-                //     this.boardSpd -= .001
-                // }
+                if(onBoard) actionMode = "surfright"
                 if(onBoard) farent.rotation.y = -1.29
                 if(!onBoard) surferBody.rotation.y = -1.29
                 boardMoving = true
@@ -577,7 +637,7 @@ class App{
             if(e.key === "ArrowLeft") {
                 goingLeft = true
      
-                // if(onBoard) actionMode = "surfleft"
+                if(onBoard) actionMode = "surfleft"
                 if(onBoard) farent.rotation.y = 1.29
                 if(!onBoard) surferBody.rotation.y = 1.29
                 boardMoving = true
@@ -618,7 +678,7 @@ class App{
         canKeyPress = false
         const fPos = farent.getAbsolutePosition()
         surferBody.parent = null
-        surferBody.position = new Vector3(fPos.x, 1.8,fPos.z)
+        surferBody.position = new Vector3(fPos.x, 0,fPos.z)
         falling = true
         Kite.animationGroups.forEach(ani => {
             if(ani.name === "falling"){
@@ -703,8 +763,8 @@ class App{
             const newWave = toClone.createInstance('newWave')
             const fId = Math.random().toString()
             newWave.parent = null
-      	    newWave.position.x = BABYLON.Scalar.RandomRange(-145, 145);
-            newWave.position.y = BABYLON.Scalar.RandomRange(0,0);
+      	    newWave.position.x = BABYLON.Scalar.RandomRange(-205, 205);
+            newWave.position.y = 5
             newWave.position.z = BABYLON.Scalar.RandomRange(-105, 155);
             newWave.actionManager = new ActionManager(scene)
            
@@ -737,7 +797,7 @@ class App{
 
         const rotatingMesh = MeshBuilder.CreateBox("rotatingMesh", {size: 8, depth: 30}, scene)
         killerMesh.parent = rotatingMesh
-        rotatingMesh.position = new Vector3(0,5,0)
+        rotatingMesh.position = new Vector3(0,0,0)
         killerMesh.isVisible=false
         rotatingMesh.isVisible=false
 
@@ -763,6 +823,9 @@ class App{
                     log(actionNum)
                     sharKToChase = undefined
                     surferPsmesh.parent.position.y = -70
+                    canKeyPress = true
+                    doNotMove = true
+                    setTimeout(() => gameOverCont.classList.remove("close"), 1500)
                 }
             )
         );
@@ -800,7 +863,7 @@ class App{
         const leftHand = Surfer.meshes[0].getChildren()[0].getChildren()[3].getChildren()[0].getChildren()[0].getChildren()[1].getChildren()[0].getChildren()[0].getChildren()[0]
 
         surferBody = MeshBuilder.CreateBox("surferBody", {size: .5}, scene)
-        const surferPsmesh = MeshBuilder.CreateBox("surferPsmesh", {size: .5}, scene)
+        const surferPsmesh = MeshBuilder.CreateBox("surferPsmesh", {size: 1}, scene)
 
         surferPs.emitter = surferPsmesh;
         surferPsmesh.parent = surferBody;
@@ -835,4 +898,11 @@ function changeMode(){
 startBtn.addEventListener("click", e => {
     theGame.introStart()
     startBtn.style.display = "none"
+})
+
+
+againBtn.addEventListener("click", async e => {
+    gameOverCont.classList.add("close")
+    theGame._engine.displayLoadingUI()
+   await theGame.main()
 })

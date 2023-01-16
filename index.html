@@ -64,11 +64,24 @@
             opacity: 0;
         }
     }
+    #startBtn{
+        position: fixed;
+        bottom: 15%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        z-index: 4;
+        padding: 6px 12px;
+        font-size: 1.1rem;
+        font-family: sans-serif;
+        cursor: pointer;
+    }
 </style>
 <body>
 
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <p class="wind-details">wind coming from left</p>
+
+    <button id="startBtn">start</button>
 
 <script src="index.js"></script>
 </body>

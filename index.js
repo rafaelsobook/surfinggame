@@ -64,7 +64,7 @@ class App{
             //     log(prop)
             // }
 
-            if(beta < 9 && beta > -9) return output.innerHTML = 'not moving'
+            if(beta < 9 && beta > -9) return output.innerHTML = `${beta}`
             if(beta > 0) return output.innerHTML = 'going right'
             if(beta < 0) return output.innerHTML = 'going left'
         })

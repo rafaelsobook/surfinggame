@@ -63,7 +63,6 @@ class App{
             //     properties+=`${prop}:${e[prop]} <br/>`
             //     log(prop)
             // }
-            if(!isTilting) return
 
             if(beta < 9 && beta > -9) return output.innerHTML = 'not moving'
             if(beta > 0) return output.innerHTML = 'going right'

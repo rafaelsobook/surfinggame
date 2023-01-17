@@ -542,7 +542,30 @@ class App{
         
         window.addEventListener("deviceorientation", e => {
             const beta = e.beta
-            output.innerHTML = Math.floor(beta)
+            
+            if(beta < 4 && beta > -4 && this.isTilting){
+                if(!this.canKeyPress) return
+                if(this.surfingTo !== undefined){
+                    log("will fall after keyup")
+                    return this.fall()
+                } 
+                
+                this.boardSpd = -.03
+                this.steeringNum = 0
+                if(this.onBoard){
+                    log('on board tayo kaya surfing dapat')
+                    this.actionMode = "surfing"
+                }else{
+                    this.actionMode = "0sinking"
+                }
+                boardSplashPS.stop()
+                this.resetRotatAndDir(farent, surferBody)
+                clearInterval(this.intervalForSplash)
+                surferPsmesh.position.z = 0
+                surferPs.stop()
+                
+                return output.innerHTML = 'stop'
+            }
             if(beta > 5 && this.isTilting) this.goRight(farent, surferBody)
             if(beta < 5 && this.isTilting) this.goLeft(farent, surferBody)
         })

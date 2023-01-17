@@ -21,12 +21,12 @@ window.addEventListener("deviceorientation", (e) => {
     betaP.innerHTML = beta
     const gammaP = document.createElement("p")
     gammaP.innerHTML = gamma
-    
+
     output.innerHTML = 
     `
-    Alpha: ${alpha} <br />
-    Beta: ${beta} <br />
-    Gama: ${gamma} <br />
+    Alpha: ${Math.floor(alpha)} <br />
+    Beta: ${Math.floor(beta)} <br />
+    Gama: ${Math.floor(gamma)} <br />
     `
 })
 

@@ -102,14 +102,15 @@ body {
   border-radius: 4px;
   transform: translate(-50%, -50%) scale(1);
   transition: 0.15s;
+  padding: 20px;
   .label {
     font-family: $ttle;
     font-size: 2.3rem;
   }
   #again {
     font-family: $mons;
-    font-size: 2rem;
-    padding: 5px 10px;
+    font-size: 1.7rem;
+    padding: 5px 15px;
     cursor: pointer;
   }
 }

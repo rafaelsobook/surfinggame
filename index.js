@@ -497,7 +497,7 @@ class App{
             this.loopEnvironment(waves, floatingWaters, leftWindz, rightWindz)
 
             if(this.actionMode !== undefined) this.playAnim(this.anims, this.actionMode)
-            
+            log(farent.position.z)
             if(this.surfingTo) farent.position.z = this.surfingTo.getAbsolutePosition().z
             if(this.doNotMove) return
             if(this.falling){
@@ -553,6 +553,16 @@ class App{
         this._makeJoyStick(cam, scene, killerMesh, rotatingMesh, this.kiteInfo.Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
         this.pressControllers(killerMesh, rotatingMesh, this.kiteInfo.Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
         this.tiltControllers(cam, scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
+    }
+    initWin(){
+        this.canKeyPress = false
+        this.doNotMove = true
+        this.actionMode = undefined
+        this.goingLeft = false
+        this.goingRight = false
+        this.leftThumbContainer.isVisible = false
+
+        this.playAnim(this.anims, "win", true)
     }
     tiltControllers(cam, scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh){
         

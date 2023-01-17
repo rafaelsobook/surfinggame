@@ -323,7 +323,7 @@ class App{
                 {
                     trigger: ActionManager.OnIntersectionEnterTrigger, 
                     parameter: { 
-                        mesh: this.boardInfo.farent, 
+                        mesh: farent, 
                         usePreciseIntersection: true
                     }
                 }, () => { 
@@ -339,7 +339,7 @@ class App{
                     surferBody.lookAt(new Vector3(farent.position.x, surferBody.position.y, farent.position.z),0,0,0)
                     this.playAnim(this.anims, 'climb')
                     setTimeout(() =>{
-                        canKeyPress = true
+                        this.canKeyPress = true
                         this.resetRotatAndDir(farent, surferBody)
                         surferBody.parent = farent
                         surferBody.position = new Vector3(0,0,3)
@@ -747,7 +747,6 @@ class App{
     }
 
     // CREATIONS
-
     createSkyBox(scene){
         const skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
         const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
@@ -914,7 +913,8 @@ startBtn.addEventListener("click", e => {
 
 
 againBtn.addEventListener("click", async e => {
-    gameOverCont.classList.add("close")
-    theGame._engine.displayLoadingUI()
-   await theGame.main()
+gameOverCont.classList.add("close")
+//     theGame._engine.displayLoadingUI()
+//    await theGame.main()
+setTimeout(() => window.location.reload,500)
 })

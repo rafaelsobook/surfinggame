@@ -1,8 +1,8 @@
 {
-    "name": "The Lost Magic",
-    "short_name": "LM",
+    "name": "Surfing Game",
+    "short_name": "Surf",
     "start_url": ".",
-    "description": "In Search for the lost magic I explore every dungeon",
+    "description": "dodge incoming waves to fulfill",
     "theme_color": "#f5f5f5",
     "background_color": "#f5f5f5",
     "icons": [

@@ -281,7 +281,6 @@ class App{
         this.intervalForSurferSplash
     }
     introStart(){
-        this.isTilting = true
         this.actionMode = undefined
         this.playAnim(this.anims, "sittostand")
         const rotatingMesh = this._scene.getMeshByName("rotatingMesh")

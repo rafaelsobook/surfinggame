@@ -63,11 +63,11 @@ class App{
             //     properties+=`${prop}:${e[prop]} <br/>`
             //     log(prop)
             // }
-
             if(!isTilting) return
+
             if(beta < 9 && beta > -9) return output.innerHTML = 'not moving'
-            if(beta > 10) this.goRight(farent, surferBody)
-            if(beta < 10) this.goLeft(farent, surferBody)
+            if(beta > 0) return output.innerHTML = 'going right'
+            if(beta < 0) return output.innerHTML = 'going left'
         })
         this.main()
     }

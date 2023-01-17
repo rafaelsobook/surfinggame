@@ -5,31 +5,10 @@ const gameOverCont = document.querySelector(".game-over-cont")
 const againBtn = document.getElementById("again")
 const output = document.getElementById("output")
 const log = console.log
-
-
-window.addEventListener("deviceorientation", (e) => {
-    let alpha = e.alpha
-    let beta = e.beta
-    let gamma = e.gamma
-    // for(var prop in e){
-    //     properties+=`${prop}:${e[prop]} <br/>`
-    //     log(prop)
-    // }
-    const alpaP = document.createElement("p")
-    alpaP.innerHTML = alpha
-    const betaP = document.createElement("p")
-    betaP.innerHTML = beta
-    const gammaP = document.createElement("p")
-    gammaP.innerHTML = gamma
-
-    output.innerHTML = 
-    `
-    Alpha: ${Math.floor(alpha)} <br />
-    Beta: ${Math.floor(beta)} <br />
-    Gama: ${Math.floor(gamma)} <br />
-    `
-})
-
+// tilt info
+let alpha = null
+let beta = null
+let gamma = null
 
 let canKeyPress = true
 let boardMoving = false
@@ -53,8 +32,9 @@ let falling = false
 let farent
 let surferBody
 
-// joystick
+// joystick && tilting
 let leftPuck // 
+let isTilting = false
 // Intervals
 let changeWindInterv
 let makeCloudInterv
@@ -73,6 +53,22 @@ class App{
         this.windSpd = .29
         this.windDir = 'left'
         this.anims = []
+
+        window.addEventListener("deviceorientation", (e) => {
+            alpha = e.alpha
+            beta = e.beta
+            gamma = e.gamma
+        
+            // for(var prop in e){
+            //     properties+=`${prop}:${e[prop]} <br/>`
+            //     log(prop)
+            // }
+
+            if(!isTilting) return
+            if(beta < 9 && beta > -9) return output.innerHTML = 'not moving'
+            if(beta > 10) this.goRight(farent, surferBody)
+            if(beta < 10) this.goLeft(farent, surferBody)
+        })
         this.main()
     }
     setCamera(cam, meshTarg){
@@ -105,7 +101,29 @@ class App{
             this._engine.resize()
         })
     }
+    stopMoving(){
 
+    }
+    goRight(farent, surferBody){
+        goingLeft = false
+        goingRight = true
+        
+        if(onBoard) actionMode = "surfright"
+        if(onBoard) farent.rotation.y = -1.29
+        if(!onBoard) surferBody.rotation.y = -1.29
+        boardMoving = true
+        output.innerHTML = `going right`
+    }
+    goLeft(farent, surferBody){
+        goingRight = false
+        goingLeft = true
+     
+        if(onBoard) actionMode = "surfleft"
+        if(onBoard) farent.rotation.y = 1.29
+        if(!onBoard) surferBody.rotation.y = 1.29
+        boardMoving = true
+        output.innerHTML = `going left`
+    }
     createSplashSmall(scene){
 
         const box = MeshBuilder.CreateBox("asd", {size: .5}, scene)
@@ -117,7 +135,7 @@ class App{
         return {box: box, ps: splashPs}
     }
     introStart(){
-        
+        isTilting = true
         actionMode = undefined
         this.playAnim(this.anims, "sittostand")
         const rotatingMesh = this._scene.getMeshByName("rotatingMesh")
@@ -252,21 +270,11 @@ class App{
                 } 
                 surferPs.stop()
                 if(xAddPos > 10){
-                    goingRight = true
-                    
-                    if(onBoard) actionMode = "surfright"
-                    if(onBoard) farent.rotation.y = -1.29
-                    if(!onBoard) surferBody.rotation.y = -1.29
-                    boardMoving = true
+                    theGame.goRight(farent, surferBody)
                     boardSplashPS.stop()
                 }
                 if(xAddPos < -10) {
-                    goingLeft = true
-         
-                    if(onBoard) actionMode = "surfleft"
-                    if(onBoard) farent.rotation.y = 1.29
-                    if(!onBoard) surferBody.rotation.y = 1.29
-                    boardMoving = true
+                    theGame.goLeft(farent, surferBody)
                     boardSplashPS.stop()
                 }
             }       
@@ -301,7 +309,7 @@ class App{
     }
     async _goToStart(){
         this.setup()
-
+        
         let floatingWaters = []
         let leftWindz = []
         let rightWindz = []
@@ -317,10 +325,10 @@ class App{
         
         // CREATING THE WATER THAT LOOPS
         const Wave = await SceneLoader.ImportMeshAsync("", "./models/", "waves.glb", scene)
-        Wave.meshes[1].parent = null
+        Wave.meshes[1].parent = null;Wave.meshes[1].position.y = 5
         Wave.meshes.forEach(mesh => log(mesh.name))
-
-        this.createWaters(30, Wave.meshes[1], floatingWaters, scene);  
+        floatingWaters.push({_id: '435ZSDF', spd: .4, mesh: Wave.meshes[1], isDown: Math.random() > .05 ? true : false })
+        this.createWaters(10, Wave.meshes[1], floatingWaters, scene);  
 
         this.setCamera(cam, theFront)
 
@@ -609,6 +617,12 @@ class App{
         })
         this._makeJoyStick(cam, scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
         this.pressControllers(killerMesh, rotatingMesh, Kite, boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
+        if(alpha === null) return log("On Desktop Mode")
+        this.askModeOfControl()
+    }
+    askModeOfControlthis(cam, scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh){
+        askCont.classList.remove("close")
+        
     }
     pressControllers(killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh){
         window.addEventListener("keyup", e => {
@@ -637,6 +651,7 @@ class App{
             }
         })
         window.addEventListener("keydown", e => {
+         
             if(!canKeyPress) return log('cankeypress false')
             if(!boardMoving){
             
@@ -651,21 +666,13 @@ class App{
             // if(!onBoard) surferPsmesh.position.z = -7.5
             surferPs.stop()
             if(e.key === "ArrowRight"){
-                goingRight = true
                 
-                if(onBoard) actionMode = "surfright"
-                if(onBoard) farent.rotation.y = -1.29
-                if(!onBoard) surferBody.rotation.y = -1.29
-                boardMoving = true
+                this.goRight(farent, surferBody )
                 boardSplashPS.stop()
             }
             if(e.key === "ArrowLeft") {
-                goingLeft = true
-     
-                if(onBoard) actionMode = "surfleft"
-                if(onBoard) farent.rotation.y = 1.29
-                if(!onBoard) surferBody.rotation.y = 1.29
-                boardMoving = true
+      
+                this.goLeft(farent, surferBody )
                 boardSplashPS.stop()
             }
         })

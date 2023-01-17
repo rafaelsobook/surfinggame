@@ -86,24 +86,7 @@ class App{
         box.isVisible = false
         return {box: box, ps: splashPs}
     }
-    introStart(){
-        this.isTilting = true
-        this.actionMode = undefined
-        this.playAnim(this.anims, "sittostand")
-        const rotatingMesh = this._scene.getMeshByName("rotatingMesh")
-        let sharkOpeningInterval
-        clearInterval(sharkOpeningInterval)
-        sharkOpeningInterval = setInterval(() => {
-            if(!rotatingMesh) return log('rotating mesh not found')
-            if(rotatingMesh.position.y <= 5) rotatingMesh.position.y+=.05
-            if(rotatingMesh.position.y > 5) clearInterval(sharkOpeningInterval)
-        },50)
-        setTimeout(() => {
-            this.doNotMove = false
-            this.canKeyPress = true
-            this.setUpCharacter('surfing', this.boardInfo.farent, this.surferInfo.surferBody, {z: 1, y: -4.5})
-        }, 2000)
-    }
+
     makeThumbArea(name, thickness, color, background, curves){
         let rect = new GUI.Ellipse();
             rect.name = name;
@@ -279,6 +262,24 @@ class App{
         this.makingWaveInterv
         this.intervalForSplash
         this.intervalForSurferSplash
+    }
+    introStart(){
+        this.isTilting = true
+        this.actionMode = undefined
+        this.playAnim(this.anims, "sittostand")
+        const rotatingMesh = this._scene.getMeshByName("rotatingMesh")
+        let sharkOpeningInterval
+        clearInterval(sharkOpeningInterval)
+        sharkOpeningInterval = setInterval(() => {
+            if(!rotatingMesh) return log('rotating mesh not found')
+            if(rotatingMesh.position.y <= 5) rotatingMesh.position.y+=.05
+            if(rotatingMesh.position.y > 5) clearInterval(sharkOpeningInterval)
+        },50)
+        setTimeout(() => {
+            this.doNotMove = false
+            this.canKeyPress = true
+            this.setUpCharacter('surfing', this.boardInfo.farent, this.surferInfo.surferBody, {z: 1, y: -4.5})
+        }, 2000)
     }
     async _goToStart(){
         this.setup()
@@ -542,9 +543,8 @@ class App{
         window.addEventListener("deviceorientation", e => {
             const beta = e.beta
             output.innerHTML = Math.floor(beta)
-            if(beta === null) return
-            if(beta > 5) return this.goRight(farent, surferBody)
-            if(beta < 5) return this.goRight(farent, surferBody)
+            if(beta > 5 && this.isTilting) this.goRight(farent, surferBody)
+            if(beta < 5 && this.isTilting) this.goRight(farent, surferBody)
         })
         
     }

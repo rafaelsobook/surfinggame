@@ -4,11 +4,26 @@ const startBtn = document.getElementById("startBtn")
 const gameOverCont = document.querySelector(".game-over-cont")
 const againBtn = document.getElementById("again")
 const output = document.getElementById("output")
+const installGame = document.getElementById("installGame")
+const chooseCont = document.querySelector(".choose-controller-cont")
 const log = console.log
-// tilt info
-let alpha = null
-let beta = null
-let gamma = null
+
+
+let deferredPrompt
+window.addEventListener("beforeinstallprompt", e => {
+    deferredPrompt = e
+})        
+installGame.addEventListener("click", e => {
+    if(!deferredPrompt) return showGuide("App already Installed or not compatible", 3000)
+    deferredPrompt.prompt()
+    deferredPrompt.userChoice
+    .then( choiceResult => {
+        if(choiceResult.outcome === "accepted") console.log("User want to install the game")
+        deferredPrompt = null
+        localStorage.setItem("surfApp", JSON.stringify({isInstalled: true})) === null
+    })
+    .catch(error => console.log(error))
+})
 
 
 class App{
@@ -120,7 +135,7 @@ class App{
         leftThumbContainer.alpha = 0.3;
 
         leftThumbContainer.left = sideJoystickOffset;
-        leftThumbContainer.top = bottomJoystickOffset;    
+        leftThumbContainer.top = bottomJoystickOffset;
     
         theGame.leftPuck = this.makeThumbArea("leftPuck", 0, "blue", "black");
         const leftPuck = theGame.leftPuck
@@ -218,7 +233,8 @@ class App{
         // leftThumbContainer.addControl(leftPuckCont);
         leftPuck.isVisible = true;
         // if(this._desktopMode)
-        leftThumbContainer.isVisible = true
+        leftThumbContainer.isVisible = false
+        theGame.leftThumbContainer = leftThumbContainer
         return
     }
     setup(){
@@ -255,6 +271,7 @@ class App{
         
         // joystick && tilting
         this.leftPuck // 
+        this.leftThumbContainer // 
         this.isTilting = false
         // Intervals
         this.changeWindInterv
@@ -566,8 +583,8 @@ class App{
                 
                 return output.innerHTML = 'stop'
             }
-            if(beta > 5 && this.isTilting) this.goRight(farent, surferBody)
-            if(beta < 5 && this.isTilting) this.goLeft(farent, surferBody)
+            if(beta > 5 && this.isTilting && this.canKeyPress) this.goRight(farent, surferBody)
+            if(beta < 5 && this.isTilting && this.canKeyPress) this.goLeft(farent, surferBody)
         })
         
     }
@@ -817,32 +834,32 @@ class App{
         rotatingMesh.isVisible=false
 
         killerMesh.actionManager = new ActionManager(scene)
-        // killerMesh.actionManager.registerAction(
-        //     new ExecuteCodeAction(
-        //         {
-        //             trigger: ActionManager.OnIntersectionEnterTrigger, 
-        //             parameter: { 
-        //                 mesh: surferPsmesh, 
-        //                 usePreciseIntersection: true
-        //             }
-        //         }, () => { 
-        //             const actionNum = Math.random() > .5 ? 1 : 2
-        //             killerAnims.forEach(ani => {
+        killerMesh.actionManager.registerAction(
+            new ExecuteCodeAction(
+                {
+                    trigger: ActionManager.OnIntersectionEnterTrigger, 
+                    parameter: { 
+                        mesh: surferPsmesh, 
+                        usePreciseIntersection: true
+                    }
+                }, () => { 
+                    const actionNum = Math.random() > .5 ? 1 : 2
+                    killerAnims.forEach(ani => {
  
-        //                 if(ani.name === `eat${actionNum}`){
-        //                     ani.play()
-        //                 }else{
-        //                     ani.stop()
-        //                 }
-        //             })
-        //             this.sharKToChase = undefined
-        //             surferPsmesh.parent.position.y = -70
-        //             this.canKeyPress = true
-        //             this.doNotMove = true
-        //             setTimeout(() => gameOverCont.classList.remove("close"), 1500)
-        //         }
-        //     )
-        // );
+                        if(ani.name === `eat${actionNum}`){
+                            ani.play()
+                        }else{
+                            ani.stop()
+                        }
+                    })
+                    this.sharKToChase = undefined
+                    surferPsmesh.parent.position.y = -70
+                    this.canKeyPress = true
+                    this.doNotMove = true
+                    setTimeout(() => gameOverCont.classList.remove("close"), 1500)
+                }
+            )
+        );
         this.killerInfo = {killerMesh, killerAnims, rotatingMesh}
         return this.killerInfo
     }
@@ -903,18 +920,51 @@ class App{
 
 const theGame = new App()
 
+function showGuide(mess, dura){
+    const guide = document.getElementById('guide')
+    guide.style.display = "block"
+    guide.innerHTML = mess
 
+    setTimeout(() => guide.style.display = "none", dura)
+}
 
 // ELEMENTS
 startBtn.addEventListener("click", e => {
+    if(window.innerWidth < 600) return showGuide('landscape your screen to start', 3000)
+    if(window.innerWidth > 600 && window.innerHeight < 500){ 
+        // if true means on mobile mode
+        
+        chooseCont.style.display = "flex"
+        return startBtn.style.display = "none"
+    }
     theGame.introStart()
     startBtn.style.display = "none"
 })
+const choiceBtns = document.querySelectorAll(".btn")
+choiceBtns.forEach(btn => {
+    btn.addEventListener("click", e => {
+        log(btn.innerHTML)
+        if(btn.innerHTML === 'yes'){
+            log("YES")
+            theGame.isTilting = true
+            theGame.introStart()
+            theGame.leftThumbContainer.isVisible = false
+            startBtn.style.display = "none"
+        }else{
+            log("NO")
+            theGame.isTilting = false
+            theGame.introStart()
+            theGame.leftThumbContainer.isVisible = true
+            startBtn.style.display = "none"
+        }
+        chooseCont.style.display = "none"
+    })
+})
 
-
+log(window.innerHeight)
 againBtn.addEventListener("click", async e => {
-gameOverCont.classList.add("close")
+    gameOverCont.classList.add("close")
 //     theGame._engine.displayLoadingUI()
 //    await theGame.main()
-setTimeout(() => window.location.reload,500)
+    setTimeout(() => location.reload(), 1000)
 })

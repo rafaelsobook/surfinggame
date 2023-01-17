@@ -84,16 +84,16 @@ body {
   }
 }
 #startBtn {
-  @include centerFixed(16%);
+  @include centerFixed(70%);
   font-family: $mons;
-  font-size: 2rem;
+  font-size: 1.6rem;
   padding: 5px 30px;
   cursor: pointer;
   border-radius: 4px;
   display: none;
 }
 .game-over-cont {
-  @include centerFixed(26%);
+  @include centerFixed(50%);
   background: rgb(138, 138, 138);
   border: 2px solid rgb(200, 200, 200);
   height: 35%;
@@ -104,9 +104,8 @@ body {
   transition: 0.15s;
   .label {
     font-family: $ttle;
-    font-size: 2.5rem;
+    font-size: 2.3rem;
   }
-
   #again {
     font-family: $mons;
     font-size: 2rem;
@@ -114,6 +113,7 @@ body {
     cursor: pointer;
   }
 }
+
 .close {
   transform: translate(-50%, -50%) scale(0);
   transition: 0.05s;
@@ -126,4 +126,44 @@ body {
   background: #f5f5f5;
   width: 200px;
   text-align: center;
+  display: none;
+}
+
+#guide {
+  @include centerFixed(50%);
+  text-align: center;
+  background: #f5f5f5;
+  font-size: 2rem;
+  padding: 30px;
+  width: 100%;
+  display: none;
+}
+#installGame {
+  position: fixed;
+  top: 2%;
+  right: 2%;
+  background: #f5f5f5;
+  font-size: 1rem;
+  padding: 5px 10px;
+}
+.choose-controller-cont {
+  @include centerFixed(50%);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: none;
+  .btn {
+    width: 100px;
+    padding: 5px;
+    margin-bottom: 15px;
+  }
+  .label {
+    font-family: $mons;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    font-weight: 500;
+    color: #f5f5f5;
+  }
 }

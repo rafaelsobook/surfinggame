@@ -7,13 +7,13 @@
     "background_color": "#f5f5f5",
     "icons": [
         {
-            "src": "/images/myicon.png",
+            "src": "/imagez/myicon.png",
             "sizes": "184x176",
             "type": "image/png",
             "purpose": "any maskable"
         },
         {
-            "src": "/images/bigicon.png",
+            "src": "/imagez/bigicon.png",
             "sizes": "600x600",
             "type": "image/png",
             "purpose": "any maskable"

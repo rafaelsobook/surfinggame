@@ -54,20 +54,6 @@ class App{
         this.windDir = 'left'
         this.anims = []
 
-        window.addEventListener("deviceorientation", (e) => {
-            alpha = e.alpha
-            beta = e.beta
-            gamma = e.gamma
-        
-            // for(var prop in e){
-            //     properties+=`${prop}:${e[prop]} <br/>`
-            //     log(prop)
-            // }
-
-            if(beta < 9 && beta > -9) return output.innerHTML = `${beta}`
-            if(beta > 0) return output.innerHTML = 'going right'
-            if(beta < 0) return output.innerHTML = 'going left'
-        })
         this.main()
     }
     setCamera(cam, meshTarg){

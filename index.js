@@ -817,32 +817,32 @@ class App{
         rotatingMesh.isVisible=false
 
         killerMesh.actionManager = new ActionManager(scene)
-        killerMesh.actionManager.registerAction(
-            new ExecuteCodeAction(
-                {
-                    trigger: ActionManager.OnIntersectionEnterTrigger, 
-                    parameter: { 
-                        mesh: surferPsmesh, 
-                        usePreciseIntersection: true
-                    }
-                }, () => { 
-                    const actionNum = Math.random() > .5 ? 1 : 2
-                    killerAnims.forEach(ani => {
+        // killerMesh.actionManager.registerAction(
+        //     new ExecuteCodeAction(
+        //         {
+        //             trigger: ActionManager.OnIntersectionEnterTrigger, 
+        //             parameter: { 
+        //                 mesh: surferPsmesh, 
+        //                 usePreciseIntersection: true
+        //             }
+        //         }, () => { 
+        //             const actionNum = Math.random() > .5 ? 1 : 2
+        //             killerAnims.forEach(ani => {
  
-                        if(ani.name === `eat${actionNum}`){
-                            ani.play()
-                        }else{
-                            ani.stop()
-                        }
-                    })
-                    this.sharKToChase = undefined
-                    surferPsmesh.parent.position.y = -70
-                    this.canKeyPress = true
-                    this.doNotMove = true
-                    setTimeout(() => gameOverCont.classList.remove("close"), 1500)
-                }
-            )
-        );
+        //                 if(ani.name === `eat${actionNum}`){
+        //                     ani.play()
+        //                 }else{
+        //                     ani.stop()
+        //                 }
+        //             })
+        //             this.sharKToChase = undefined
+        //             surferPsmesh.parent.position.y = -70
+        //             this.canKeyPress = true
+        //             this.doNotMove = true
+        //             setTimeout(() => gameOverCont.classList.remove("close"), 1500)
+        //         }
+        //     )
+        // );
         this.killerInfo = {killerMesh, killerAnims, rotatingMesh}
         return this.killerInfo
     }

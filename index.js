@@ -3,8 +3,33 @@ const canvas = document.getElementById("renderCanvas")
 const startBtn = document.getElementById("startBtn")
 const gameOverCont = document.querySelector(".game-over-cont")
 const againBtn = document.getElementById("again")
+const output = document.getElementById("output")
 const log = console.log
-log(canvas)
+
+
+window.addEventListener("deviceorientation", (e) => {
+    let alpha = e.alpha
+    let beta = e.beta
+    let gamma = e.gamma
+    // for(var prop in e){
+    //     properties+=`${prop}:${e[prop]} <br/>`
+    //     log(prop)
+    // }
+    const alpaP = document.createElement("p")
+    alpaP.innerHTML = alpha
+    const betaP = document.createElement("p")
+    betaP.innerHTML = beta
+    const gammaP = document.createElement("p")
+    gammaP.innerHTML = gamma
+    
+    output.innerHTML = 
+    `
+    Alpha: ${alpha} <br />
+    Beta: ${beta} <br />
+    Gama: ${gamma} <br />
+    `
+})
+
 
 let canKeyPress = true
 let boardMoving = false

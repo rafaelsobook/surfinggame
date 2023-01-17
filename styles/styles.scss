@@ -9,7 +9,7 @@ $littleblack: rgb(70, 70, 70);
 $littlewhite: rgb(195, 195, 195);
 @mixin centerFixed($bot) {
   position: fixed;
-  bottom: $bot;
+  top: $bot;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 4;
@@ -117,4 +117,11 @@ body {
 .close {
   transform: translate(-50%, -50%) scale(0);
   transition: 0.05s;
+}
+
+#output {
+  @include centerFixed(50%);
+  font-size: 1rem;
+  padding: 30px;
+  background: #f5f5f5;
 }

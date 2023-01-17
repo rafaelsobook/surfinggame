@@ -544,7 +544,7 @@ class App{
             const beta = e.beta
             output.innerHTML = Math.floor(beta)
             if(beta > 5 && this.isTilting) this.goRight(farent, surferBody)
-            if(beta < 5 && this.isTilting) this.goRight(farent, surferBody)
+            if(beta < 5 && this.isTilting) this.goLeft(farent, surferBody)
         })
         
     }

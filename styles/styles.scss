@@ -94,8 +94,6 @@ body {
 }
 .game-over-cont {
   @include centerFixed(50%);
-  background: rgb(138, 138, 138);
-  border: 2px solid rgb(200, 200, 200);
   height: 35%;
   width: 40%;
   @include flexy(column);
@@ -109,8 +107,8 @@ body {
   }
   #again {
     font-family: $mons;
-    font-size: 1.7rem;
-    padding: 5px 15px;
+    font-size: 1.4rem;
+    padding: 1px 20px;
     cursor: pointer;
   }
 }

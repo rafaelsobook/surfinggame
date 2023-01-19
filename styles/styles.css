@@ -113,8 +113,6 @@ body {
   -webkit-transform: translate(-50%, -50%);
           transform: translate(-50%, -50%);
   z-index: 4;
-  background: #8a8a8a;
-  border: 2px solid #c8c8c8;
   height: 35%;
   width: 40%;
   display: -webkit-box;
@@ -135,6 +133,7 @@ body {
           transform: translate(-50%, -50%) scale(1);
   -webkit-transition: 0.15s;
   transition: 0.15s;
+  padding: 20px;
 }
 
 .game-over-cont .label {
@@ -144,8 +143,8 @@ body {
 
 .game-over-cont #again {
   font-family: "Montserrat", sans-serif;
-  font-size: 2rem;
-  padding: 5px 10px;
+  font-size: 1.4rem;
+  padding: 1px 20px;
   cursor: pointer;
 }
 

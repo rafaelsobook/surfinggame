@@ -3,9 +3,9 @@ const canvas = document.getElementById("renderCanvas")
 const startBtn = document.getElementById("startBtn")
 const gameOverCont = document.querySelector(".game-over-cont")
 const againBtn = document.getElementById("again")
-const output = document.getElementById("output")
 const installGame = document.getElementById("installGame")
 const chooseCont = document.querySelector(".choose-controller-cont")
+const label = document.getElementById("labelForResult")
 const log = console.log
 
 
@@ -56,21 +56,7 @@ class App{
         clearInterval(this.intervalForSplash)
         clearInterval(this.intervalForSurferSplash)
     }
-    async main(){
-        this.clearAllInterval()
-        await this._goToStart()
 
-        this._engine.runRenderLoop( () => {
-            this._scene.render()
-        })
-
-        window.addEventListener("resize", e => {
-            this._engine.resize()
-        })
-    }
-    stopMoving(){
-
-    }
     goRight(farent, surferBody){
         this.goingLeft = false
         this.goingRight = true
@@ -79,7 +65,6 @@ class App{
         if(this.onBoard) farent.rotation.y = -1.29
         if(!this.onBoard) surferBody.rotation.y = -1.29
         this.boardMoving = true
-        output.innerHTML = `going right`
     }
     goLeft(farent, surferBody){
         this.goingRight = false
@@ -89,7 +74,6 @@ class App{
         if(this.onBoard) farent.rotation.y = 1.29
         if(!this.onBoard) surferBody.rotation.y = 1.29
         this.boardMoving = true
-        output.innerHTML = `going left`
     }
     createSplashSmall(scene){
 
@@ -101,7 +85,6 @@ class App{
         box.isVisible = false
         return {box: box, ps: splashPs}
     }
-
     makeThumbArea(name, thickness, color, background, curves){
         let rect = new GUI.Ellipse();
             rect.name = name;
@@ -245,7 +228,7 @@ class App{
         this.windDir = 'left'
         this.anims = []
 
-        this.canKeyPress = true
+        this.canKeyPress = false
         this.boardMoving = false
         this.surfingTo = undefined
         this.isSurfing = false
@@ -296,6 +279,18 @@ class App{
             this.canKeyPress = true
             this.setUpCharacter('surfing', this.boardInfo.farent, this.surferInfo.surferBody, {z: 1, y: -4.5})
         }, 2000)
+    }
+    async main(){
+        this.clearAllInterval()
+        await this._goToStart()
+
+        this._engine.runRenderLoop( () => {
+            this._scene.render()
+        })
+
+        window.addEventListener("resize", e => {
+            this._engine.resize()
+        })
     }
     async _goToStart(){
         this.setup()
@@ -421,12 +416,15 @@ class App{
         // making big waves
         this.makingWaveInterv = setInterval(() => {
             if(this.doNotMove) return
+            const theWidth = BABYLON.Scalar.RandomRange(10,40)
             const bigwavePsClone = bigSplashWave.clone('bigSplashWave')
             const forPSMesh = MeshBuilder.CreateBox("bigwave", {size: .5}, scene)
             bigwavePsClone.emitter = forPSMesh
             bigwavePsClone.emitRate = BABYLON.Scalar.RandomRange(400, 2000)
+            bigwavePsClone.height = theWidth
+            forPSMesh.isVisible = false
            
-            const movingWave = MeshBuilder.CreateBox("movingWave", {size: 5.5, width: 34}, scene)
+            const movingWave = MeshBuilder.CreateBox("movingWave", {size: 5.5, width: theWidth}, scene)
             forPSMesh.parent = movingWave
             forPSMesh.rotation.z = Math.PI/2
             forPSMesh.position.y += 4
@@ -497,7 +495,7 @@ class App{
             this.loopEnvironment(waves, floatingWaters, leftWindz, rightWindz)
 
             if(this.actionMode !== undefined) this.playAnim(this.anims, this.actionMode)
-            log(farent.position.z)
+
             if(this.surfingTo) farent.position.z = this.surfingTo.getAbsolutePosition().z
             if(this.doNotMove) return
             if(this.falling){
@@ -521,9 +519,10 @@ class App{
                     this.killerInfo.rotatingMesh.addRotation(0,this.sharkRotatSpd,0)
                 } 
                 if(this.boardMoving){ 
+                    if(bodyPos.z < -85) return this.initWin(cam)
                     farent.locallyTranslate(new Vector3(0,0,this.boardSpd*this._engine.getDeltaTime()))
                     if(this.goingLeft && this.windDir === 'left' || this.goingRight && this.windDir === 'right'){
-                        log("nakikipag bang gaan ka")
+
                         if(this.boardSpd <= -.01) this.boardSpd = this.boardSpd + .01
                         this.stopAnim(this.anims, 'surfing')
                     }else{
@@ -552,19 +551,36 @@ class App{
         })
         this._makeJoyStick(cam, scene, killerMesh, rotatingMesh, this.kiteInfo.Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
         this.pressControllers(killerMesh, rotatingMesh, this.kiteInfo.Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
-        this.tiltControllers(cam, scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh)
+        this.tiltControllers(boardSplashPS, farent, surferBody,surferPs, surferPsmesh)
     }
-    initWin(){
+    initWin(cam){
+
         this.canKeyPress = false
         this.doNotMove = true
         this.actionMode = undefined
         this.goingLeft = false
         this.goingRight = false
         this.leftThumbContainer.isVisible = false
+        this.boardInfo.farent.position.z = -85
+        this.boardInfo.farent.position.x = 0
+        this.boardInfo.farent.rotation.y = 0
 
-        this.playAnim(this.anims, "win", true)
+        clearInterval(this.intervalMovingDown)
+        this.intervalMovingDown = setInterval(() => {
+            this.actionMode = undefined
+            this.boardInfo.farent.position.z +=.3
+            this.playAnim(this.anims, "win")
+            if(this.boardInfo.farent.position.z > 40) return clearInterval(this.intervalMovingDown)
+        }, 50)
+        this.playAnim(this.anims, 'win', true)
+        setTimeout(() => {
+            this.playAnim(this.anims, 'win', true)
+          label.innerHTML = "Congratulations"
+          gameOverCont.classList.remove("close")
+        }, 3000)
+        
     }
-    tiltControllers(cam, scene, killerMesh, rotatingMesh, Kite,boardSplashPS, theFront, farent, surferBody,surferPs, surferPsmesh){
+    tiltControllers(boardSplashPS, farent, surferBody,surferPs, surferPsmesh){
         
         window.addEventListener("deviceorientation", e => {
             const beta = e.beta
@@ -575,11 +591,11 @@ class App{
                     log("will fall after keyup")
                     return this.fall()
                 } 
-                
+            
                 this.boardSpd = -.03
                 this.steeringNum = 0
                 if(this.onBoard){
-                    log('on board tayo kaya surfing dapat')
+                    log('We are on board so our action is surfing')
                     this.actionMode = "surfing"
                 }else{
                     this.actionMode = "0sinking"
@@ -590,7 +606,7 @@ class App{
                 surferPsmesh.position.z = 0
                 surferPs.stop()
                 
-                return output.innerHTML = 'stop'
+                return
             }
             if(beta > 5 && this.isTilting && this.canKeyPress) this.goRight(farent, surferBody)
             if(beta < 5 && this.isTilting && this.canKeyPress) this.goLeft(farent, surferBody)
@@ -741,7 +757,7 @@ class App{
             },100)
         }, 4000)
     }
-    surfUp(farent, toAddRotat, dura){
+    surfUp(farent){
         this.surfingTo = farent
         this.isSurfing = true
         // farent.addRotation(0,0, goingLeft ? toAddRotat : -toAddRotat)
@@ -752,7 +768,7 @@ class App{
         // }, 200)
         // setTimeout(() => canKeyPress= true, 1000)
     }
-    surfDown(farent, toAddRotat){
+    surfDown(){
         this.surfingTo = undefined
         this.isSurfing = false
         // farent.rotation.x = 0
@@ -771,7 +787,6 @@ class App{
         
         this.sharKToChase = surferBody
     }
-
     // CREATIONS
     createSkyBox(scene){
         const skybox = BABYLON.Mesh.CreateBox("skyBox", 1000.0, scene);
@@ -831,7 +846,6 @@ class App{
         theKiller.scaling = new Vector3(.8,.8,.8)
         
         theKiller.parent = killerMesh
-        // theKiller.rotationQuaternion = null
         const killerAnims = Killer.animationGroups
 
         killerMesh.position.x = this.sharkRadius
@@ -851,7 +865,8 @@ class App{
                         mesh: surferPsmesh, 
                         usePreciseIntersection: true
                     }
-                }, () => { 
+                }, () => {
+                    if(this.onBoard) return
                     const actionNum = Math.random() > .5 ? 1 : 2
                     killerAnims.forEach(ani => {
  
@@ -900,9 +915,6 @@ class App{
         const surferPs = ParticleSystem.Parse(surferJson, scene, "")
         const Surfer = await SceneLoader.ImportMeshAsync("", "./models/", "surfer.glb", scene)
 
-        const rightHand = Surfer.meshes[0].getChildren()[0].getChildren()[3].getChildren()[0].getChildren()[0].getChildren()[2].getChildren()[0].getChildren()[0].getChildren()[0]
-        const leftHand = Surfer.meshes[0].getChildren()[0].getChildren()[3].getChildren()[0].getChildren()[0].getChildren()[1].getChildren()[0].getChildren()[0].getChildren()[0]
-
         const surferBody = MeshBuilder.CreateBox("surferBody", {size: .5}, scene)
         const surferPsmesh = MeshBuilder.CreateBox("surferPsmesh", {size: 1}, scene)
 
@@ -921,11 +933,10 @@ class App{
         surfer.parent = surferBody
 
         surferPsmesh.actionManager = new ActionManager(scene)
-        this.surferInfo = { surferPs, surferBody, surferPsmesh, surfer, rightHand, leftHand}
+        this.surferInfo = { surferPs, surferBody, surferPsmesh, surfer}
         return this.surferInfo
     }
 }
-
 
 const theGame = new App()
 
@@ -954,13 +965,11 @@ choiceBtns.forEach(btn => {
     btn.addEventListener("click", e => {
         log(btn.innerHTML)
         if(btn.innerHTML === 'yes'){
-            log("YES")
             theGame.isTilting = true
             theGame.introStart()
             theGame.leftThumbContainer.isVisible = false
             startBtn.style.display = "none"
         }else{
-            log("NO")
             theGame.isTilting = false
             theGame.introStart()
             theGame.leftThumbContainer.isVisible = true
@@ -969,9 +978,7 @@ choiceBtns.forEach(btn => {
         chooseCont.style.display = "none"
     })
 })
-
-log(window.innerHeight)
-againBtn.addEventListener("click", async e => {
+againBtn.addEventListener("click", e => {
     gameOverCont.classList.add("close")
 //     theGame._engine.displayLoadingUI()
 //    await theGame.main()

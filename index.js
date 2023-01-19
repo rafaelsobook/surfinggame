@@ -410,21 +410,23 @@ class App{
             }
         }, 500)
           
-        let bigSplashWaveJson = {"name":"CPU particle system","id":"default system","capacity":10000,"disposeOnStop":false,"manualEmitCount":-1,"emitter":[0,0,0],"particleEmitterType":{"type":"CylinderParticleEmitter","radius":1,"height":45,"radiusRange":1,"directionRandomizer":1},"texture":{"tags":null,"url":"https://assets.babylonjs.com/textures/flare.png","uOffset":0,"vOffset":0,"uScale":1,"vScale":1,"uAng":0,"vAng":0,"wAng":0,"uRotationCenter":0.5,"vRotationCenter":0.5,"wRotationCenter":0.5,"homogeneousRotationInUVTransform":false,"isBlocking":true,"name":"https://assets.babylonjs.com/textures/flare.png","hasAlpha":false,"getAlphaFromRGB":false,"level":1,"coordinatesIndex":0,"optimizeUVAllocation":true,"coordinatesMode":0,"wrapU":1,"wrapV":1,"wrapR":1,"anisotropicFilteringLevel":4,"isCube":false,"is3D":false,"is2DArray":false,"gammaSpace":true,"invertZ":false,"lodLevelInAlpha":false,"lodGenerationOffset":0,"lodGenerationScale":0,"linearSpecularLOD":false,"isRenderTarget":false,"animations":[],"invertY":true,"samplingMode":3,"_useSRGBBuffer":false},"isLocal":false,"animations":[],"beginAnimationOnStart":false,"beginAnimationFrom":0,"beginAnimationTo":60,"beginAnimationLoop":false,"startDelay":0,"renderingGroupId":0,"isBillboardBased":true,"billboardMode":7,"minAngularSpeed":0,"maxAngularSpeed":0,"minSize":0.1,"maxSize":0.1,"minScaleX":2,"maxScaleX":1,"minScaleY":1,"maxScaleY":1,"minEmitPower":2,"maxEmitPower":2,"minLifeTime":4,"maxLifeTime":4,"emitRate":1000,"gravity":[0,-4,0],"noiseStrength":[10,10,10],"color1":[0.00784313725490196,0.2823529411764706,0.2823529411764706,1],"color2":[0.0196078431372549,0.1568627450980392,0.20784313725490197,1],"colorDead":[0.13725490196078433,0.15294117647058825,0.23529411764705882,1],"updateSpeed":0.045,"targetStopDuration":0,"blendMode":0,"preWarmCycles":0,"preWarmStepOffset":1,"minInitialRotation":0.01,"maxInitialRotation":0,"startSpriteCellID":0,"spriteCellLoop":true,"endSpriteCellID":0,"spriteCellChangeSpeed":1,"spriteCellWidth":0,"spriteCellHeight":0,"spriteRandomStartCell":false,"isAnimationSheetEnabled":false,"useLogarithmicDepth":false,"sizeGradients":[{"gradient":0,"factor1":1,"factor2":1.5},{"gradient":0.5,"factor1":2,"factor2":2.5},{"gradient":1,"factor1":0.01,"factor2":0.5}],"textureMask":[1,1,1,1],"customShader":null,"preventAutoStart":false}
-        const bigSplashWave = ParticleSystem.Parse(bigSplashWaveJson, scene, "")
+
             
         // making big waves
         this.makingWaveInterv = setInterval(() => {
             if(this.doNotMove) return
             const theWidth = BABYLON.Scalar.RandomRange(10,40)
-            const bigwavePsClone = bigSplashWave.clone('bigSplashWave')
+            let bigSplashWaveJson = {"name":"CPU particle system","id":"default system","capacity":10000,"disposeOnStop":false,"manualEmitCount":-1,"emitter":[0,0,0],"particleEmitterType":{"type":"CylinderParticleEmitter","radius":1,"height":45,"radiusRange":1,"directionRandomizer":1},"texture":{"tags":null,"url":"https://assets.babylonjs.com/textures/flare.png","uOffset":0,"vOffset":0,"uScale":1,"vScale":1,"uAng":0,"vAng":0,"wAng":0,"uRotationCenter":0.5,"vRotationCenter":0.5,"wRotationCenter":0.5,"homogeneousRotationInUVTransform":false,"isBlocking":true,"name":"https://assets.babylonjs.com/textures/flare.png","hasAlpha":false,"getAlphaFromRGB":false,"level":1,"coordinatesIndex":0,"optimizeUVAllocation":true,"coordinatesMode":0,"wrapU":1,"wrapV":1,"wrapR":1,"anisotropicFilteringLevel":4,"isCube":false,"is3D":false,"is2DArray":false,"gammaSpace":true,"invertZ":false,"lodLevelInAlpha":false,"lodGenerationOffset":0,"lodGenerationScale":0,"linearSpecularLOD":false,"isRenderTarget":false,"animations":[],"invertY":true,"samplingMode":3,"_useSRGBBuffer":false},"isLocal":false,"animations":[],"beginAnimationOnStart":false,"beginAnimationFrom":0,"beginAnimationTo":60,"beginAnimationLoop":false,"startDelay":0,"renderingGroupId":0,"isBillboardBased":true,"billboardMode":7,"minAngularSpeed":0,"maxAngularSpeed":0,"minSize":0.1,"maxSize":0.1,"minScaleX":2,"maxScaleX":1,"minScaleY":1,"maxScaleY":1,"minEmitPower":2,"maxEmitPower":2,"minLifeTime":4,"maxLifeTime":4,"emitRate":1000,"gravity":[0,-4,0],"noiseStrength":[10,10,10],"color1":[0.00784313725490196,0.2823529411764706,0.2823529411764706,1],"color2":[0.0196078431372549,0.1568627450980392,0.20784313725490197,1],"colorDead":[0.13725490196078433,0.15294117647058825,0.23529411764705882,1],"updateSpeed":0.045,"targetStopDuration":0,"blendMode":0,"preWarmCycles":0,"preWarmStepOffset":1,"minInitialRotation":0.01,"maxInitialRotation":0,"startSpriteCellID":0,"spriteCellLoop":true,"endSpriteCellID":0,"spriteCellChangeSpeed":1,"spriteCellWidth":0,"spriteCellHeight":0,"spriteRandomStartCell":false,"isAnimationSheetEnabled":false,"useLogarithmicDepth":false,"sizeGradients":[{"gradient":0,"factor1":1,"factor2":1.5},{"gradient":0.5,"factor1":2,"factor2":2.5},{"gradient":1,"factor1":0.01,"factor2":0.5}],"textureMask":[1,1,1,1],"customShader":null,"preventAutoStart":false}
+            bigSplashWaveJson.height = theWidth
+            const bigwavePsClone = ParticleSystem.Parse(bigSplashWaveJson, scene, "")
+            
             const forPSMesh = MeshBuilder.CreateBox("bigwave", {size: .5}, scene)
             bigwavePsClone.emitter = forPSMesh
             bigwavePsClone.emitRate = BABYLON.Scalar.RandomRange(400, 2000)
-            bigwavePsClone.height = theWidth
+            
             forPSMesh.isVisible = false
            
-            const movingWave = MeshBuilder.CreateBox("movingWave", {size: 5.5, width: theWidth}, scene)
+            const movingWave = MeshBuilder.CreateBox("movingWave", {size: 15.5, width: parseInt(theWidth)+theWidth/2}, scene)
             forPSMesh.parent = movingWave
             forPSMesh.rotation.z = Math.PI/2
             forPSMesh.position.y += 4
@@ -487,7 +489,6 @@ class App{
             }, 50000)
         },5000)
         // bigSplashWave.disposeOnStop = true
-        bigSplashWave.stop()
         this.showPrecaution(4000, "incoming wind from left")
 
         // this will run 40-60times per sec // run per Fps

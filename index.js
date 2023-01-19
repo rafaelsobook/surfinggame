@@ -991,3 +991,8 @@ againBtn.addEventListener("click", e => {
 //    await theGame.main()
     setTimeout(() => location.reload(), 1000)
 })
+function reset(){
+    menuCont.style.transform = "translateY(-100%)"
+    settingBtn.style.display="none"
+    setTimeout(() => window.location.reload(), 1000)
+}

@@ -6,13 +6,16 @@ const againBtn = document.getElementById("again")
 const installGame = document.getElementById("installGame")
 const chooseCont = document.querySelector(".choose-controller-cont")
 const label = document.getElementById("labelForResult")
+const settingBtn = document.querySelector(".setting-btn")
+const menuCont = document.querySelector(".menu-cont")
 const log = console.log
 
 
 let deferredPrompt
 window.addEventListener("beforeinstallprompt", e => {
     deferredPrompt = e
-})        
+})
+
 installGame.addEventListener("click", e => {
     if(!deferredPrompt) return showGuide("App already Installed or not compatible", 3000)
     deferredPrompt.prompt()
@@ -24,7 +27,13 @@ installGame.addEventListener("click", e => {
     })
     .catch(error => console.log(error))
 })
+let isMenuOpen = false
+settingBtn.addEventListener("click", e => {
+    if(!isMenuOpen) menuCont.style.transform = "translateY(0px)"
+    if(isMenuOpen) menuCont.style.transform = "translateY(-100%)"
 
+    isMenuOpen = !isMenuOpen
+})
 
 class App{
     constructor(){
@@ -56,14 +65,13 @@ class App{
         clearInterval(this.intervalForSplash)
         clearInterval(this.intervalForSurferSplash)
     }
-
     goRight(farent, surferBody){
         this.goingLeft = false
         this.goingRight = true
         
         if(this.onBoard) this.actionMode = "surfright"
         if(this.onBoard) farent.rotation.y = -1.29
-        if(!this.onBoard) surferBody.rotation.y = -1.29
+        if(!this.onBoard) surferBody.rotation.y = -1
         this.boardMoving = true
     }
     goLeft(farent, surferBody){
@@ -72,7 +80,7 @@ class App{
      
         if(this.onBoard) this.actionMode = "surfleft"
         if(this.onBoard) farent.rotation.y = 1.29
-        if(!this.onBoard) surferBody.rotation.y = 1.29
+        if(!this.onBoard) surferBody.rotation.y = 1
         this.boardMoving = true
     }
     createSplashSmall(scene){
@@ -409,9 +417,7 @@ class App{
                 setTimeout(() => wind.dispose(), 10000)
             }
         }, 500)
-          
-
-            
+                    
         // making big waves
         this.makingWaveInterv = setInterval(() => {
             if(this.doNotMove) return

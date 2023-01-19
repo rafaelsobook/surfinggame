@@ -137,13 +137,50 @@ body {
   width: 100%;
   display: none;
 }
-#installGame {
+.menu-cont {
   position: fixed;
-  top: 2%;
-  right: 2%;
+  top: 0;
+  right: 0;
   background: #f5f5f5;
   font-size: 1rem;
   padding: 5px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 2;
+  background: none;
+  transform: translateY(-100%);
+  transition: 0.1s;
+}
+.setting-btn {
+  position: fixed;
+  top: 5px;
+  right: 5px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  border: none;
+  outline: none;
+  background: none;
+}
+.setting-img {
+  pointer-events: none;
+  height: 100%;
+  width: 100%;
+}
+
+.menu-btn {
+  cursor: pointer;
+  opacity: 0.9;
+  color: rgb(44, 42, 42);
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  padding: 0px 10px;
+}
+.none {
+  opacity: 0;
+  pointer-events: none;
 }
 .choose-controller-cont {
   @include centerFixed(50%);
